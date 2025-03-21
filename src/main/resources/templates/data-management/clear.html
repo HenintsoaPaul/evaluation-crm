@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<div th:insert="~{/general/head.html}"></div>
+<meta name="csrf" content="${_csrf.token}"/>
+<meta name="csrf_header" content="${_csrf.headerName}"/>
+<link rel="stylesheet" th:href="@{/css/bootstrap-wysihtml5.css}"/>
+<!-- Editable CSS -->
+<link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" type="text/css"/>
+<!-- Custom CSS -->
+<link th:href="@{/css/style.min.css}" rel="stylesheet">
+<!-- page css -->
+<link th:href="@{/css/pages/inbox.css}" rel="stylesheet">
+<!--<link th:href="@{/css/form-icheck.css}" rel="stylesheet">-->
+<link th:href="@{/css/ribbon-page.css}" rel="stylesheet">
+
+<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+<!--[if lt IE 9]>
+<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+<![endif]-->
+</head>
+
+<body class="skin-blue fixed-layout">
+<!-- ============================================================== -->
+<!-- Preloader - style you can find in spinners.css -->
+<!-- ============================================================== -->
+<div class="preloader">
+    <div class="loader">
+        <div class="loader__figure"></div>
+        <p class="loader__label">Elite admin</p>
+    </div>
+</div>
+<!-- ============================================================== -->
+<!-- Main wrapper - style you can find in pages.scss -->
+<!-- ============================================================== -->
+<div id="main-wrapper">
+    <!-- ============================================================== -->
+    <!-- Topbar header - style you can find in pages.scss -->
+    <!-- ============================================================== -->
+    <div th:insert="~{/general/header.html}"></div>
+    <!-- ============================================================== -->
+    <!-- End Topbar header -->
+    <!-- ============================================================== -->
+    <!-- ============================================================== -->
+    <!-- Left Sidebar - style you can find in sidebar.scss  -->
+    <!-- ============================================================== -->
+    <div th:insert="~{/general/left-sidebar.html}"></div>
+    <!-- ============================================================== -->
+    <!-- End Left Sidebar - style you can find in sidebar.scss  -->
+    <!-- ============================================================== -->
+    <!-- ============================================================== -->
+    <!-- Page wrapper  -->
+    <!-- ============================================================== -->
+    <div class="page-wrapper">
+        <!-- ============================================================== -->
+        <!-- Container fluid  -->
+        <!-- ============================================================== -->
+        <div class="container-fluid">
+            <!-- ============================================================== -->
+            <!-- Bread crumb and right sidebar toggle -->
+            <!-- ============================================================== -->
+            <div th:insert="~{/general/page-titles.html}"></div>
+            <!-- ============================================================== -->
+            <!-- End Bread crumb and right sidebar toggle -->
+            <!-- ============================================================== -->
+            <!-- ============================================================== -->
+            <!-- Start Page Content -->
+            <!-- ============================================================== -->
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Gestion des tables</h4>
+
+                    <form th:action="@{/data/management/clear-all}" method="post">
+                        <button id="clear-all" class="btn btn-danger" type="submit">Supprimer tout</button>
+                    </form>
+
+                    <form th:action="@{/data/management/clear-table}" method="post">
+                        <div class="mt-3">
+                            <label for="table-select">Sélectionner une table :</label>
+                            <select id="table-select" class="form-control" name="tableName" required>
+                                <option value="">-- Choisir une table --</option>
+                                <option th:each="table : ${tables}" th:value="${table}" th:text="${table}"></option>
+                            </select>
+                            <button id="clear-table" class="btn btn-warning mt-2" type="submit">Vider la table</button>
+                        </div>
+                    </form>
+
+                    <br>
+                    <div th:if="${message != null}" class="alert alert-success alert-dismissible fade show" role="alert">
+                        <strong>Success!</strong> [[${message}]]
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                    <div th:if="${error != null}" class="alert alert-alert alert-dismissible fade show" role="alert">
+                        <strong>Erreur!</strong> [[${error}]]
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- ============================================================== -->
+            <!-- End Page Content -->
+            <!-- ============================================================== -->
+            <!-- ============================================================== -->
+            <!-- Right sidebar -->
+            <!-- ============================================================== -->
+            <!-- .right-sidebar -->
+            <div th:insert="~{/general/right-sidebar.html}"></div>
+            <!-- ============================================================== -->
+            <!-- End Right sidebar -->
+            <!-- ============================================================== -->
+        </div>
+        <!-- ============================================================== -->
+        <!-- End Container fluid  -->
+        <!-- ============================================================== -->
+    </div>
+    <!-- ============================================================== -->
+    <!-- End Page wrapper  -->
+    <!-- ============================================================== -->
+    <!-- ============================================================== -->
+    <!-- footer -->
+    <!-- ============================================================== -->
+    <div th:insert="~{/general/footer.html}"></div>
+    <!-- ============================================================== -->
+    <!-- End footer -->
+    <!-- ============================================================== -->
+</div>
+<!-- ============================================================== -->
+<!-- End Wrapper -->
+<!-- ============================================================== -->
+<!-- ============================================================== -->
+<!-- All Jquery -->
+<!-- ============================================================== -->
+<script th:inline="javascript">
+    var home = /*[[${home}]]*/ null;
+</script>
+<script th:src="@{/js/library/jquery-3.2.1.min.js}" type="text/javascript">></script>
+<!--    &lt;!&ndash; Bootstrap tether Core JavaScript &ndash;&gt;-->
+<script th:src="@{/js/library/popper.min.js}" type="text/javascript">></script>
+<script th:src="@{/js/library/bootstrap.min.js}" type="text/javascript">></script>
+<!--    &lt;!&ndash; slimscrollbar scrollbar JavaScript &ndash;&gt;-->
+<script th:src="@{/js/library/perfect-scrollbar.jquery.min.js}" type="text/javascript">></script>
+<!--Wave Effects -->
+<script th:src="@{/js/library/waves.js}" type="text/javascript">></script>
+<!--Menu sidebar -->
+<script th:src="@{/js/library/sidebarmenu.js}" type="text/javascript">></script>
+<!--stickey kit -->
+<script th:src="@{/js/library/sticky-kit.min.js}"></script>
+<script th:src="@{/js/library/jquery.sparkline.min.js}" type="text/javascript">></script>
+<!--Custom JavaScript -->
+<script th:src="@{/js/library/custom.min.js}" type="text/javascript">></script>
+<!-- Editable -->
+
+<script th:src="@{/js/library/wysihtml5-0.3.0.js}"></script>
+<script th:src="@{/js/library/bootstrap-wysihtml5.js}"></script>
+
+</body>
+</html>
