@@ -96,7 +96,7 @@
                             <span aria-hidden="true">×</span>
                         </button>
                     </div>
-                    <div th:if="${error != null}" class="alert alert-alert alert-dismissible fade show" role="alert">
+                    <div th:if="${error != null}" class="alert alert-danger alert-dismissible fade show" role="alert">
                         <strong>Erreur!</strong> [[${error}]]
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                             <span aria-hidden="true">×</span>
@@ -125,14 +125,14 @@
                     </form>
 
                     <br>
-                    <div th:if="${message != null}" class="alert alert-success alert-dismissible fade show"
+                    <div th:if="${messageGen != null}" class="alert alert-success alert-dismissible fade show"
                          role="alert">
-                        <strong>Success!</strong> [[${message}]]
+                        <strong>Success!</strong> [[${messageGen}]]
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                             <span aria-hidden="true">×</span>
                         </button>
                     </div>
-                    <div th:if="${error != null}" class="alert alert-alert alert-dismissible fade show" role="alert">
+                    <div th:if="${errorGen != null}" class="alert alert-danger alert-dismissible fade show" role="alert">
                         <strong>Erreur!</strong> [[${error}]]
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                             <span aria-hidden="true">×</span>

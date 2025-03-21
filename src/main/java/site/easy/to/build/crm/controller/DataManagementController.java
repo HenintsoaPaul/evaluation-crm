@@ -19,7 +19,7 @@ public class DataManagementController {
     private final DataDeleteService service;
     private final DataGeneratorService generatorService;
 
-    @GetMapping("/clear")
+    @GetMapping
     public String showPage(Model model) {
         model.addAttribute("tables", service.getDeletableTables());
         model.addAttribute("tablesGen", service.getAllTables());
@@ -35,7 +35,7 @@ public class DataManagementController {
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/data/management/clear";
+        return "redirect:/data/management";
     }
 
     @PostMapping("/clear-table")
@@ -47,7 +47,7 @@ public class DataManagementController {
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/data/management/clear";
+        return "redirect:/data/management";
     }
 
     @PostMapping("/gen-table")
@@ -55,10 +55,12 @@ public class DataManagementController {
         try {
             Map<String, Object> data = generatorService.generateData(tableName, new HashMap<>());
             generatorService.saveGeneratedData(tableName, data);
+
+            redirectAttributes.addFlashAttribute("messageGen", data.size() + " ont ete inseres.");
         } catch (Exception e) {
             e.printStackTrace();
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            redirectAttributes.addFlashAttribute("errorGen", e.getMessage());
         }
-        return "redirect:/data/management/clear";
+        return "redirect:/data/management";
     }
 }
