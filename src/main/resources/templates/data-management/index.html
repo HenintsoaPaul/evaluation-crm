@@ -68,9 +68,10 @@
             <!-- ============================================================== -->
             <!-- Start Page Content -->
             <!-- ============================================================== -->
+            <!-- delete -->
             <div class="card">
                 <div class="card-body">
-                    <h4 class="card-title">Gestion des tables</h4>
+                    <h4 class="card-title">Suppression de data</h4>
 
                     <form th:action="@{/data/management/clear-all}" method="post">
                         <button id="clear-all" class="btn btn-danger" type="submit">Supprimer tout</button>
@@ -88,7 +89,44 @@
                     </form>
 
                     <br>
-                    <div th:if="${message != null}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <div th:if="${message != null}" class="alert alert-success alert-dismissible fade show"
+                         role="alert">
+                        <strong>Success!</strong> [[${message}]]
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                    <div th:if="${error != null}" class="alert alert-alert alert-dismissible fade show" role="alert">
+                        <strong>Erreur!</strong> [[${error}]]
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- generate -->
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Generation de data</h4>
+
+<!--                    <form th:action="@{/data/management/clear-all}" method="post">-->
+<!--                        <button id="clear-all" class="btn btn-danger" type="submit">Supprimer tout</button>-->
+<!--                    </form>-->
+
+                    <form th:action="@{/data/management/gen-table}" method="post">
+                        <div class="mt-3">
+                            <label for="table-select-gen">Sélectionner une table :</label>
+                            <select id="table-select-gen" class="form-control" name="tableName" required>
+                                <option value="">-- Choisir une table --</option>
+                                <option th:each="table : ${tablesGen}" th:value="${table}" th:text="${table}"></option>
+                            </select>
+                            <button id="clear-table-gen" class="btn btn-warning mt-2" type="submit">Generer data</button>
+                        </div>
+                    </form>
+
+                    <br>
+                    <div th:if="${message != null}" class="alert alert-success alert-dismissible fade show"
+                         role="alert">
                         <strong>Success!</strong> [[${message}]]
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                             <span aria-hidden="true">×</span>

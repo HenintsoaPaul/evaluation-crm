@@ -10,7 +10,7 @@ import java.util.List;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class DataManagementService {
+public class DataDeleteService {
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -18,6 +18,13 @@ public class DataManagementService {
             "customer", "customer_login_info", "oauth_users",
             "roles", "user_profile", "user_roles", "users"
     );
+
+    public List<String> getAllTables() {
+        return jdbcTemplate.queryForList(
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE()",
+                String.class
+        );
+    }
 
     public List<String> getDeletableTables() {
         List<String> tables = jdbcTemplate.queryForList(
