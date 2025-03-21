@@ -5,19 +5,25 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import site.easy.to.build.crm.service.DataManagementService;
+import site.easy.to.build.crm.service.DataDeleteService;
+import site.easy.to.build.crm.service.DataGeneratorService;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/data/management")
 @RequiredArgsConstructor
 public class DataManagementController {
 
-    private final DataManagementService service;
+    private final DataDeleteService service;
+    private final DataGeneratorService generatorService;
 
     @GetMapping("/clear")
     public String showPage(Model model) {
         model.addAttribute("tables", service.getDeletableTables());
-        return "/data-management/clear";
+        model.addAttribute("tablesGen", service.getAllTables());
+        return "/data-management/index";
     }
 
     @PostMapping("/clear-all")
@@ -37,6 +43,18 @@ public class DataManagementController {
         try {
             service.deleteTable(tableName);
             redirectAttributes.addFlashAttribute("message", "La table " + tableName + " a été vidée avec succès.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/data/management/clear";
+    }
+
+    @PostMapping("/gen-table")
+    public String genDataForTable(@RequestParam(name = "tableName") String tableName, RedirectAttributes redirectAttributes) {
+        try {
+            Map<String, Object> data = generatorService.generateData(tableName, new HashMap<>());
+            generatorService.saveGeneratedData(tableName, data);
         } catch (Exception e) {
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("error", e.getMessage());
