@@ -22,7 +22,7 @@ public class GenericCsvService<T, E> {
 
     private final Validator validator;
 
-    private void validateBatch(List<T> rows) {
+    private void validateBatch(List<T> rows) throws CsvValidationException {
         List<String> errors = new ArrayList<>();
 
         for (int i = 0; i < rows.size(); i++) {
@@ -38,7 +38,7 @@ public class GenericCsvService<T, E> {
         }
     }
 
-    public List<T> parseCsv(MultipartFile file, Class<T> clazz) throws IOException {
+    public List<T> getDtosFromCsv(MultipartFile file, Class<T> clazz) throws IOException {
         try (
                 InputStreamReader isr = new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8);
                 BufferedReader br = new BufferedReader(isr)
@@ -57,10 +57,8 @@ public class GenericCsvService<T, E> {
             validateBatch(uploads);
 
             return uploads;
+        } catch (CsvValidationException e) {
+            throw new RuntimeException(e);
         }
-    }
-
-    public E convertToEntity(T csvDto) {
-        return null;
     }
 }

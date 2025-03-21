@@ -5,7 +5,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class CsvValidationException extends RuntimeException {
+public class CsvValidationException extends Exception {
     private final List<String> errors;
 
     public CsvValidationException(String message, List<String> errors) {
