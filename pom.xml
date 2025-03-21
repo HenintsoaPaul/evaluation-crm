@@ -138,6 +138,13 @@
 			<artifactId>tika-core</artifactId>
 			<version>2.7.0</version>
 		</dependency>
+
+        <!--for csv import-->
+		<dependency>
+			<groupId>com.opencsv</groupId>
+			<artifactId>opencsv</artifactId>
+			<version>5.7.1</version>
+		</dependency>
     </dependencies>
 	<build>
 		<plugins>
