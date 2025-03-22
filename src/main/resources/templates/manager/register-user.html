@@ -102,6 +102,44 @@
                             </form>
                         </div>
                     </div>
+
+                    <!--csv-->
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Import Csv</h4>
+                            <form th:action="@{/import/csv/user}"  id="csv-form" method="post" enctype="multipart/form-data">
+                                <label class="m-t-20" for="user-file">Csv:</label>
+                                <div class="input-group">
+                                    <input id="user-file" type="file" name="file" accept=".csv" class="form-control" required="required">
+                                </div>
+                                <button type="submit" class="btn btn-primary m-t-20">Import Csv</button>
+                            </form>
+                            <br>
+                            <div th:if="${message != null}" class="alert alert-success alert-dismissible fade show" role="alert">
+                                <strong>Success!</strong> [[${message}]]
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                            <div th:if="${error != null}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <strong>Erreur!</strong> [[${error}]]
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                            <div th:if="${validationErrors != null}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <strong>Erreur!</strong>
+                                <ul>
+                                    <li th:each="er:${validationErrors}">
+                                        <span th:text="${er}"></span>
+                                    </li>
+                                </ul>
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div th:if="${!isGoogleUser}" class="ribbon-wrapper card">

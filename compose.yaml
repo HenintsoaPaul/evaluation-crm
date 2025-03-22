@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql8_container
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: crm
+      MYSQL_USER: crm
+      MYSQL_PASSWORD: crm
+      MYSQL_ROOT_HOST: "%"    # Ajouté pour autoriser les connexions depuis n'importe quel hôte
+    ports:
+      - "3306:3306"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+      - --bind-address=0.0.0.0
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  mysql_data:

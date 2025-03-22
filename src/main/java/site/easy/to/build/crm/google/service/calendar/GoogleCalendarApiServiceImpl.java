@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -58,26 +59,48 @@ public class GoogleCalendarApiServiceImpl implements GoogleCalendarApiService {
 
         // Convert Event objects to EventDisplay objects
         List<EventDisplay> eventDisplays = eventList.getItems().stream()
-                .map(event -> {
-                    EventDateTime start = event.getStart();
-                    EventDateTime end = event.getEnd();
-                    Map<String, String> startDateTimeParts = TimeDateUtil.extractDateTime(start.getDateTime());
-                    Map<String, String> endDateTimeParts = TimeDateUtil.extractDateTime(end.getDateTime());
-
-                    return new EventDisplay(
-                            event.getId(),
-                            event.getSummary(),
-                            startDateTimeParts.get("date"),
-                            startDateTimeParts.get("time"),
-                            endDateTimeParts.get("date"),
-                            endDateTimeParts.get("time"),
-                            startDateTimeParts.get("timeZone"),
-                            event.getAttendees()
-                    );
-                })
+                .map(this::getEventDisplay)
                 .collect(Collectors.toList());
 
         return new EventDisplayList(eventDisplays);
+    }
+
+    private EventDisplay getEventDisplay(Event event) {
+        EventDateTime start = event.getStart();
+        EventDateTime end = event.getEnd();
+
+        // gestion des anniversaires(tss debut + fin)
+        if (start.getDateTime() == null && start.getDate() == null) {
+            throw new IllegalStateException("Événement sans date/datetime: " + event.getId());
+        }
+
+        String startDate, startTime, endDate, endTime, timeZone;
+        if (start.getDateTime() == null) {
+            startDate = start.getDate();
+            endDate = LocalDate.parse(end.getDate()).minusDays(1).toString();
+            startTime = "00:01";
+            endTime = "23:59";
+            timeZone = "UTC";
+        } else {
+            Map<String, String> startDateTimeParts = TimeDateUtil.extractDateTime(start.getDateTime());
+            Map<String, String> endDateTimeParts = TimeDateUtil.extractDateTime(end.getDateTime());
+            startDate = startDateTimeParts.get("date");
+            startTime = startDateTimeParts.get("time");
+            endDate = endDateTimeParts.get("date");
+            endTime = endDateTimeParts.get("time");
+            timeZone = startDateTimeParts.get("timeZone");
+        }
+
+        return new EventDisplay(
+                event.getId(),
+                event.getSummary(),
+                startDate,
+                startTime,
+                endDate,
+                endTime,
+                timeZone,
+                event.getAttendees()
+        );
     }
 
     public String createEvent(String calendarId, OAuthUser oauthUser, Event event) throws IOException, GeneralSecurityException {
@@ -134,27 +157,12 @@ public class GoogleCalendarApiServiceImpl implements GoogleCalendarApiService {
 
         GenericUrl eventsUrl = new GenericUrl(API_BASE_URL + calendarId + "/events/" + eventId);
 
-
         HttpRequest request = requestFactory.buildGetRequest(eventsUrl);
         HttpResponse response = request.execute();
         String jsonResponse = response.parseAsString();
         Event event = objectMapper.readValue(jsonResponse, Event.class);
 
-        EventDateTime start = event.getStart();
-        EventDateTime end = event.getEnd();
-        Map<String, String> startDateTimeParts = TimeDateUtil.extractDateTime(start.getDateTime());
-        Map<String, String> endDateTimeParts = TimeDateUtil.extractDateTime(end.getDateTime());
-
-        return new EventDisplay(
-                event.getId(),
-                event.getSummary(),
-                startDateTimeParts.get("date"),
-                startDateTimeParts.get("time"),
-                endDateTimeParts.get("date"),
-                endDateTimeParts.get("time"),
-                startDateTimeParts.get("timeZone"),
-                event.getAttendees()
-        );
+        return this.getEventDisplay(event);
     }
 
     private void updateLead(OAuthUser oAuthUser, String eventId, String status) {
