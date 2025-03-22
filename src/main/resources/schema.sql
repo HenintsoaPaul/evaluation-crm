@@ -497,7 +497,7 @@ CREATE TABLE IF NOT EXISTS `google_drive_file` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 -- Jour 2
-CREATE TABLE budget_alert_config
+CREATE TABLE IF NOT EXISTS budget_alert_config
 (
     id            INT AUTO_INCREMENT,
     rate          DECIMAL(15, 2) NOT NULL,
@@ -505,7 +505,7 @@ CREATE TABLE budget_alert_config
     PRIMARY KEY (id)
 );
 
-CREATE TABLE budget
+CREATE TABLE IF NOT EXISTS budget
 (
     id            INT AUTO_INCREMENT,
     name          VARCHAR(50),
@@ -517,7 +517,7 @@ CREATE TABLE budget
     FOREIGN KEY (customer_id) REFERENCES customer (customer_id)
 );
 
-CREATE TABLE expense
+CREATE TABLE IF NOT EXISTS expense
 (
     id            INT AUTO_INCREMENT,
     name          VARCHAR(50),
