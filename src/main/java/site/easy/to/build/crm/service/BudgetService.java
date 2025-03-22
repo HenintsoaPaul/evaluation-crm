@@ -32,4 +32,8 @@ public class BudgetService {
     public Budget findById(int id) {
         return budgetRepository.findById(id).orElse(null);
     }
+
+    public List<Budget> findByCustomerId(int customerId) {
+        return budgetRepository.findByCustomerId(customerId);
+    }
 }
