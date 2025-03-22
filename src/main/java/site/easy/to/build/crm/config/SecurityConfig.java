@@ -55,11 +55,13 @@ public class SecurityConfig {
 
         http.csrf((csrf) -> csrf
                 .csrfTokenRepository(httpSessionCsrfTokenRepository)
+                .ignoringRequestMatchers("/api/**")
         );
 
         http.
                 authorizeHttpRequests((authorize) -> authorize
 
+                        .requestMatchers("/api/**").permitAll()
                         .requestMatchers("/register/**").permitAll()
                         .requestMatchers("/set-employee-password/**").permitAll()
                         .requestMatchers("/change-password/**").permitAll()
