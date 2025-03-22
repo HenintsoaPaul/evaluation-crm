@@ -66,6 +66,9 @@ public class Lead {
     @JoinColumn(name = "budget_id")
     private Budget budget;
 
+    @OneToOne(mappedBy = "lead")
+    private Expense expense;
+
     public Lead() {
     }
 

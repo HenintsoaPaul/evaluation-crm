@@ -1,6 +1,7 @@
 package site.easy.to.build.crm.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -23,12 +24,18 @@ public class Expense {
     @Column(name = "creation_date", nullable = false)
     private LocalDateTime creationDate;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "lead_id", unique = true)
     private Lead lead;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "ticket_id", unique = true)
     private Ticket ticket;
+
+    // Validation personnalisée pour garantir lead OU ticket
+    @AssertTrue
+    private boolean isValid() {
+        return (lead != null) ^ (ticket != null);
+    }
 
 }

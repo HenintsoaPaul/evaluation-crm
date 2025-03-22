@@ -53,6 +53,9 @@ public class Ticket {
     @JoinColumn(name = "budget_id")
     private Budget budget;
 
+    @OneToOne(mappedBy = "ticket")
+    private Expense expense;
+
     public Ticket() {
     }
 
