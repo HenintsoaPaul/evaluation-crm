@@ -1,6 +1,7 @@
 package site.easy.to.build.crm.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,6 +29,7 @@ public class BudgetController {
     private final UserServiceImpl userService;
     private final CustomerServiceImpl customerService;
 
+    // crud methods
     @GetMapping
     public String showList(
             Model model,
@@ -96,6 +98,13 @@ public class BudgetController {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/budget";
+    }
+
+    // api methods
+    @GetMapping("/api")
+    public ResponseEntity<List<Budget>> getBudgetsByCustomer(@RequestParam int customerId) {
+        List<Budget> budgets = budgetService.findByCustomerId(customerId);
+        return ResponseEntity.ok(budgets);
     }
 
     //    methods
