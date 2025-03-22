@@ -496,6 +496,42 @@ CREATE TABLE IF NOT EXISTS `google_drive_file` (
 ) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+-- Jour 2
+CREATE TABLE budget_alert_config
+(
+    id            INT AUTO_INCREMENT,
+    rate          DECIMAL(15, 2) NOT NULL,
+    creation_date DATETIME       NOT NULL,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE budget
+(
+    id            INT AUTO_INCREMENT,
+    name          VARCHAR(50),
+    creation_date DATETIME       NOT NULL,
+    amount_limit  DECIMAL(15, 2) NOT NULL,
+    amount_remain DECIMAL(15, 2) NOT NULL,
+    customer_id   INT unsigned   NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (customer_id) REFERENCES customer (customer_id)
+);
+
+CREATE TABLE expense
+(
+    id            INT AUTO_INCREMENT,
+    name          VARCHAR(50),
+    amount        DECIMAL(15, 2) NOT NULL,
+    creation_date DATETIME       NOT NULL,
+    lead_id       INT unsigned,
+    ticket_id     INT unsigned,
+    PRIMARY KEY (id),
+    UNIQUE (lead_id),
+    UNIQUE (ticket_id),
+    FOREIGN KEY (lead_id) REFERENCES trigger_lead (lead_id),
+    FOREIGN KEY (ticket_id) REFERENCES trigger_ticket (ticket_id)
+);
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
