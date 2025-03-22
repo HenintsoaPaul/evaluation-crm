@@ -38,7 +38,7 @@ public class GenericCsvService<T, E> {
         }
     }
 
-    public List<T> getDtosFromCsv(MultipartFile file, Class<T> clazz) throws IOException {
+    public List<T> getDtosFromCsv(MultipartFile file, Class<T> clazz) throws IOException, CsvValidationException {
         try (
                 InputStreamReader isr = new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8);
                 BufferedReader br = new BufferedReader(isr)
@@ -50,6 +50,9 @@ public class GenericCsvService<T, E> {
             CsvToBean<T> csvToBean = new CsvToBeanBuilder<T>(br)
                     .withType(clazz)
                     .withIgnoreLeadingWhiteSpace(true)
+//                    .withSeparator(';')
+//                    .withQuoteChar('"') // regrouper les valeurs entre "..." [plusieurs valeurs, sur plusieurs ligne, double "..." pour echapper des "..."]
+//                    .withThrowExceptions(false) // pour éviter une erreur fatale en cas de colonne maquant
                     .build();
 
             List<T> uploads = csvToBean.parse();
@@ -57,8 +60,13 @@ public class GenericCsvService<T, E> {
             validateBatch(uploads);
 
             return uploads;
-        } catch (CsvValidationException e) {
-            throw new RuntimeException(e);
         }
     }
+    
+    /*
+    * 1-csv ->conversion-> csvDto (+ validation 😁)
+    * 2-csvDto ->insertion-> tempTable
+    * 3-tempTable ->select distinct des lignes fk a inserer-> . ->insertion des Fk dans les tables des Fk-> void
+    * 4-tempTable ->insertion dans la table final
+    * */
 }
