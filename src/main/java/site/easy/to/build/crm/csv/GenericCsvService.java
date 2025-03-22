@@ -62,7 +62,7 @@ public class GenericCsvService<T, E> {
             return uploads;
         }
     }
-    
+
     /*
     * 1-csv ->conversion-> csvDto (+ validation 😁)
     * 2-csvDto ->insertion-> tempTable
