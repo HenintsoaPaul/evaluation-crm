@@ -9,6 +9,16 @@ import java.util.List;
 
 @Repository
 public interface ExpenseRepository extends JpaRepository<Expense, Integer> {
-    @Query("select e from Expense e where e.lead.customer.customerId = :customerId or e.ticket.customer.customerId = :customerId")
+    @Query(value = """
+            SELECT e.*
+            FROM expense e
+            WHERE EXISTS (
+                SELECT 1 FROM trigger_lead l
+                WHERE l.lead_id = e.lead_id AND l.customer_id = :customerId
+            ) OR EXISTS (
+                SELECT 1 FROM trigger_ticket t
+                WHERE t.ticket_id = e.ticket_id AND t.customer_id = :customerId
+            )
+            """, nativeQuery = true)
     List<Expense> findByCustomerId(int customerId);
 }
