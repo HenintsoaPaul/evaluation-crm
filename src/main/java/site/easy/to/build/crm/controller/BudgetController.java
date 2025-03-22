@@ -28,8 +28,46 @@ public class BudgetController {
     private final UserServiceImpl userService;
     private final CustomerServiceImpl customerService;
 
-    @GetMapping("/create")
-    public String showForm(
+    @GetMapping
+    public String showList(
+            Model model,
+            Authentication authentication
+    ) {
+        int userId = authenticationUtils.getLoggedInUserId(authentication);
+        User user = userService.findById(userId);
+        if (user.isInactiveUser()) {
+            return "error/account-inactive";
+        }
+
+        model.addAttribute("budgets", budgetService.findAll());
+        return "budget/all-budgets";
+    }
+
+    @GetMapping("/update-budget/{id}")
+    public String showFormUpdate(
+            Model model,
+            Authentication authentication,
+            @PathVariable int id
+    ) {
+        int userId = authenticationUtils.getLoggedInUserId(authentication);
+        User user = userService.findById(userId);
+        if (user.isInactiveUser()) {
+            return "error/account-inactive";
+        }
+
+        Budget budget = budgetService.findById(id);
+        if (budget == null) {
+            return "error/not-found";
+        }
+
+        populateModelAttributes(model, authentication, user);
+
+        model.addAttribute("budget", budget);
+        return "budget/update-budget";
+    }
+
+    @GetMapping("/create-budget")
+    public String showFormCreate(
             Model model,
             Authentication authentication
     ) {
@@ -45,20 +83,19 @@ public class BudgetController {
         return "budget/create-budget";
     }
 
-    @PostMapping("/create")
-    public String processForm(
+    @PostMapping("/save-budget")
+    public String processFormd(
             @ModelAttribute("budget") Budget budget,
-            @RequestParam int customerId,
             RedirectAttributes redirectAttributes
     ) {
         try {
-            budgetService.save(budget, customerId);
+            budgetService.save(budget);
             redirectAttributes.addFlashAttribute("message", "Budget created successfully");
         } catch (Exception e) {
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/budget/create";
+        return "redirect:/budget";
     }
 
     //    methods

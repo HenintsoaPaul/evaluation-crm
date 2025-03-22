@@ -5,30 +5,31 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.easy.to.build.crm.entity.Budget;
-import site.easy.to.build.crm.entity.Customer;
 import site.easy.to.build.crm.repository.BudgetRepository;
-import site.easy.to.build.crm.service.customer.CustomerServiceImpl;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class BudgetService {
 
     private final BudgetRepository budgetRepository;
-    private final CustomerServiceImpl customerService;
 
     @Transactional
-    public Budget save(@NotNull Budget budget, int customerId) throws Exception {
+    public Budget save(@NotNull Budget budget) throws Exception {
         budget.setCreationDate(LocalDateTime.now());
         budget.setAmountRemain(budget.getAmountLimit());
 
-        Customer customer = customerService.findByCustomerId(customerId);
-        if (customer == null) {
-            throw new Exception("Client introuvable!");
-        }
-        budget.setCustomer(customer);
-
         return budgetRepository.save(budget);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Budget> findAll() {
+        return budgetRepository.findAll();
+    }
+
+    public Budget findById(int id) {
+        return budgetRepository.findById(id).orElse(null);
     }
 }
