@@ -1,7 +1,6 @@
 package site.easy.to.build.crm.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,11 +43,45 @@ public class CsvController {
             String msg = "Fichier CSV traité avec succès : " + users.size() + " lignes insérées";
             redirectAttributes.addFlashAttribute("message", msg);
         } catch (CsvValidationException e) {
-            redirectAttributes.addFlashAttribute("error", Strings.join(e.getErrors(), '\n'));
+            redirectAttributes.addFlashAttribute("validationErrors", e.getErrors());
         } catch (Exception ex) {
             ex.printStackTrace();
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }
         return "redirect:/manager/register-user";
+    }
+
+    @PostMapping
+    public String genericImport(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("tableName") String tableName,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            int userId = authenticationUtils.getLoggedInUserId(authentication);
+            User loggedInUser = userService.findById(userId);
+            if (loggedInUser.isInactiveUser()) {
+                return "error/account-inactive";
+            }
+            OAuthUser oAuthUser = authenticationUtils.getOAuthUserFromAuthentication(authentication);
+
+            String msg;
+            switch (tableName) {
+                case "user":
+                    userService.importCsv(file, oAuthUser);
+                    msg = "Import dans la table user!";
+                    break;
+                default:
+                    msg = "Import dans la table user!";
+                    break;
+            }
+            redirectAttributes.addFlashAttribute("messageImp", msg);
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorImp", e.getMessage());
+        }
+
+        return "redirect:/data/management";
     }
 }
