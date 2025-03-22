@@ -54,4 +54,12 @@ public class ExpenseService {
     public List<Expense> findAll() {
         return expenseRepository.findAll();
     }
+
+    public List<Expense> findByCustomerId(int customerId) {
+        return expenseRepository.findByCustomerId(customerId);
+    }
+
+    public void deleteById(int expenseId) {
+        expenseRepository.deleteById(expenseId);
+    }
 }

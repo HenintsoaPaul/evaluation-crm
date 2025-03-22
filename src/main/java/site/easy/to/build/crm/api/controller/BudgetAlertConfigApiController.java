@@ -11,10 +11,10 @@ import site.easy.to.build.crm.api.ApiResponse;
 import site.easy.to.build.crm.entity.BudgetAlertConfig;
 import site.easy.to.build.crm.service.BudgetAlertConfigService;
 
-@Controller
+@RestController
 @RequestMapping("/api/budget-alert-config")
 @RequiredArgsConstructor
-public class BudgetAlertConfigController {
+public class BudgetAlertConfigApiController {
 
     private final BudgetAlertConfigService budgetAlertConfigService;
 
