@@ -64,6 +64,21 @@ public class DataDeleteService {
         }
     }
 
+    @Transactional
+    public void deleteRowCascade(String tableName, String pkValue) {
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0;");
+
+        try {
+            for (String query : getDeleteQueriesForRow(tableName, pkValue)) {
+                jdbcTemplate.execute(query);
+            }
+            String pkColumn = getPrimaryKeyColumn(tableName);
+            jdbcTemplate.execute("DELETE FROM " + tableName + " WHERE " + pkColumn + " = " + pkValue + ";");
+        } finally {
+            jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1;");
+        }
+    }
+
     public List<String> getDeleteQueries(String tableName) {
         String primaryKeyColumn = getPrimaryKeyColumn(tableName);
 
@@ -76,6 +91,18 @@ public class DataDeleteService {
                 """.formatted(tableName);
 
         return jdbcTemplate.queryForList(sql, new Object[]{primaryKeyColumn, tableName}, String.class);
+    }
+
+    private List<String> getDeleteQueriesForRow(String tableName, String primaryKeyValue) {
+        String sql = """
+                SELECT CONCAT('DELETE FROM ', TABLE_NAME, ' WHERE ', COLUMN_NAME, 
+                              ' = ', ?) AS delete_query
+                FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+                WHERE REFERENCED_TABLE_NAME = ? 
+                  AND TABLE_SCHEMA = DATABASE()
+                """;
+
+        return jdbcTemplate.queryForList(sql, new Object[]{primaryKeyValue, tableName}, String.class);
     }
 
     private String getPrimaryKeyColumn(String tableName) {

@@ -19,6 +19,7 @@ public class ExpenseService {
 
     private final ExpenseRepository expenseRepository;
     private final BudgetRepository budgetRepository;
+    private final DataDeleteService dataDeleteService;
 
     private void decreaseBudgetRemaining(Budget budget, double amountExpense) {
         double remain = budget.getAmountRemain() - amountExpense;
@@ -60,6 +61,6 @@ public class ExpenseService {
     }
 
     public void deleteById(int expenseId) {
-        expenseRepository.deleteById(expenseId);
+        dataDeleteService.deleteRowCascade("expense", expenseId + "");
     }
 }
