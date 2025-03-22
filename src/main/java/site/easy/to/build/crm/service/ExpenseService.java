@@ -3,14 +3,13 @@ package site.easy.to.build.crm.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import site.easy.to.build.crm.entity.Budget;
-import site.easy.to.build.crm.entity.Expense;
-import site.easy.to.build.crm.entity.Lead;
-import site.easy.to.build.crm.entity.Ticket;
+import site.easy.to.build.crm.api.ApiServerException;
+import site.easy.to.build.crm.entity.*;
 import site.easy.to.build.crm.repository.BudgetRepository;
 import site.easy.to.build.crm.repository.ExpenseRepository;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -60,7 +59,32 @@ public class ExpenseService {
         return expenseRepository.findByCustomerId(customerId);
     }
 
-    public void deleteById(int expenseId) {
+    @Transactional
+    public void deleteById(int expenseId) throws ApiServerException {
+        expenseRepository.findById(expenseId)
+                .orElseThrow(() -> new ApiServerException("Expense not found"));
+
         dataDeleteService.deleteRowCascade("expense", expenseId + "");
+    }
+
+    @Transactional
+    public HashMap<String, Object> updateById(int expenseId, double newAmount) throws ApiServerException {
+        Expense expense = expenseRepository.findById(expenseId)
+                .orElseThrow(() -> new ApiServerException("Expense not found"));
+
+        Budget budget = expense.getTicket().getBudget();
+
+        double oldAmount = expense.getAmount(),
+                oldBudgetRemain = budget.getAmountRemain(),
+                newBudgetRemain = oldBudgetRemain + oldAmount - newAmount;
+
+        expense.setAmount(newAmount);
+        budget.setAmountRemain(newBudgetRemain);
+
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("expense", expense);
+        map.put("budget", budget);
+
+        return map;
     }
 }
