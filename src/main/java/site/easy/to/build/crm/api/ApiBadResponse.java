@@ -8,6 +8,14 @@ import org.springframework.http.HttpStatus;
 @EqualsAndHashCode(callSuper = true)
 public class ApiBadResponse<T> extends ApiResponse<T> {
 
+    public ApiBadResponse(String message) {
+        super(
+                HttpStatus.BAD_REQUEST.value(),
+                message,
+                null
+        );
+    }
+
     public ApiBadResponse(String message, T data) {
         super(
                 HttpStatus.BAD_REQUEST.value(),
