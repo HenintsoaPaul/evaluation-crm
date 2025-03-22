@@ -15,6 +15,7 @@ import site.easy.to.build.crm.entity.*;
 import site.easy.to.build.crm.entity.settings.TicketEmailSettings;
 import site.easy.to.build.crm.google.service.acess.GoogleAccessService;
 import site.easy.to.build.crm.google.service.gmail.GoogleGmailApiService;
+import site.easy.to.build.crm.service.BudgetAlertConfigService;
 import site.easy.to.build.crm.service.customer.CustomerService;
 import site.easy.to.build.crm.service.settings.TicketEmailSettingsService;
 import site.easy.to.build.crm.service.ticket.TicketService;
@@ -41,11 +42,11 @@ public class TicketController {
     private final TicketEmailSettingsService ticketEmailSettingsService;
     private final GoogleGmailApiService googleGmailApiService;
     private final EntityManager entityManager;
-
+    private final BudgetAlertConfigService budgetAlertConfigService;
 
     @Autowired
     public TicketController(TicketService ticketService, AuthenticationUtils authenticationUtils, UserService userService, CustomerService customerService,
-                            TicketEmailSettingsService ticketEmailSettingsService, GoogleGmailApiService googleGmailApiService, EntityManager entityManager) {
+                            TicketEmailSettingsService ticketEmailSettingsService, GoogleGmailApiService googleGmailApiService, EntityManager entityManager, BudgetAlertConfigService budgetAlertConfigService) {
         this.ticketService = ticketService;
         this.authenticationUtils = authenticationUtils;
         this.userService = userService;
@@ -53,6 +54,7 @@ public class TicketController {
         this.ticketEmailSettingsService = ticketEmailSettingsService;
         this.googleGmailApiService = googleGmailApiService;
         this.entityManager = entityManager;
+        this.budgetAlertConfigService = budgetAlertConfigService;
     }
 
     @GetMapping("/show-ticket/{id}")
@@ -119,6 +121,7 @@ public class TicketController {
         model.addAttribute("employees",employees);
         model.addAttribute("customers",customers);
         model.addAttribute("ticket", new Ticket());
+        model.addAttribute("budgetAlertConfig", budgetAlertConfigService.findCurrent());
         return "ticket/create-ticket";
     }
 
@@ -149,6 +152,7 @@ public class TicketController {
 
             model.addAttribute("employees",employees);
             model.addAttribute("customers",customers);
+            model.addAttribute("budgetAlertConfig", budgetAlertConfigService.findCurrent());
             return "ticket/create-ticket";
         }
 
