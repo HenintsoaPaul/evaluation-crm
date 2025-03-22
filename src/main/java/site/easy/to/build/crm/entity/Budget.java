@@ -2,9 +2,11 @@ package site.easy.to.build.crm.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
+@Data
 @Entity
 @Table(name = "budget")
 public class Budget {
