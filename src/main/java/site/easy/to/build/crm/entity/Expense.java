@@ -23,12 +23,12 @@ public class Expense {
     @Column(name = "creation_date", nullable = false)
     private LocalDateTime creationDate;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "lead_id")
+    @ManyToOne
+    @JoinColumn(name = "lead_id", unique = true)
     private Lead lead;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ticket_id")
+    @ManyToOne
+    @JoinColumn(name = "ticket_id", unique = true)
     private Ticket ticket;
 
 }

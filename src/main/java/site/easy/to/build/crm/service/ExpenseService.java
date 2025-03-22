@@ -11,6 +11,7 @@ import site.easy.to.build.crm.repository.BudgetRepository;
 import site.easy.to.build.crm.repository.ExpenseRepository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -47,5 +48,10 @@ public class ExpenseService {
         expense.setCreationDate(LocalDateTime.now());
 
         return expenseRepository.save(expense);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Expense> findAll() {
+        return expenseRepository.findAll();
     }
 }
