@@ -77,15 +77,19 @@
                                     <input type="text" id="subject" th:field="*{subject}" class="form-control">
                                 </div>
                                 <div class="input-group">
-                                    <span class="text-danger font-weight-bold" th:if="${#fields.hasErrors('subject')}" th:errors="*{subject}"></span>
+                                    <span class="text-danger font-weight-bold" th:if="${#fields.hasErrors('subject')}"
+                                          th:errors="*{subject}"></span>
                                 </div>
 
                                 <label class="m-t-20" for="description">Description:</label>
                                 <div class="input-group">
-                                    <textarea class="textarea_editor form-control" id="description" rows="15" placeholder="Enter text ..." th:field="*{description}"></textarea>
+                                    <textarea class="textarea_editor form-control" id="description" rows="15"
+                                              placeholder="Enter text ..." th:field="*{description}"></textarea>
                                 </div>
                                 <div class="input-group">
-                                    <span class="text-danger font-weight-bold" th:if="${#fields.hasErrors('description')}" th:errors="*{description}" autocomplete="off"></span>
+                                    <span class="text-danger font-weight-bold"
+                                          th:if="${#fields.hasErrors('description')}" th:errors="*{description}"
+                                          autocomplete="off"></span>
                                 </div>
 
                                 <label class="m-t-20" for="status">status:</label>
@@ -104,7 +108,8 @@
                                     </select>
                                 </div>
                                 <div class="input-group">
-                                    <span class="text-danger font-weight-bold" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></span>
+                                    <span class="text-danger font-weight-bold" th:if="${#fields.hasErrors('status')}"
+                                          th:errors="*{status}"></span>
                                 </div>
 
                                 <label class="m-t-20" for="priority">Priority:</label>
@@ -119,20 +124,39 @@
                                     </select>
                                 </div>
                                 <div class="input-group">
-                                    <span class="text-danger font-weight-bold" th:if="${#fields.hasErrors('priority')}" th:errors="*{priority}"></span>
+                                    <span class="text-danger font-weight-bold" th:if="${#fields.hasErrors('priority')}"
+                                          th:errors="*{priority}"></span>
                                 </div>
 
                                 <label class="m-t-20" for="employeeId">Assign Employee:</label>
                                 <div class="input-group">
                                     <select name="employeeId" id="employeeId" class="form-control">
-                                        <option th:each="employee : ${employees}" th:text="${employee.username}" th:value="${employee.id}"></option>
+                                        <option th:each="employee : ${employees}" th:text="${employee.username}"
+                                                th:value="${employee.id}"></option>
                                     </select>
                                 </div>
 
                                 <label class="m-t-20" for="customerId">Customer:</label>
                                 <div class="input-group">
                                     <select name="customerId" id="customerId" class="form-control">
-                                        <option th:each="customer : ${customers}" th:text="${customer.name}" th:value="${customer.customerId}"></option>
+                                        <option value="">Choose customer</option>
+                                        <option th:each="customer : ${customers}" th:text="${customer.name}"
+                                                th:value="${customer.customerId}"></option>
+                                    </select>
+                                </div>
+
+                                <!--amount_expense-->
+                                <label class="m-t-20" for="amount_expense">Amount Expense:</label>
+                                <div class="input-group">
+                                    <input type="number" id="amount_expense" name="amount_expense" class="form-control"
+                                           required>
+                                </div>
+
+                                <!--budget-->
+                                <label class="m-t-20" for="budget">Budget:</label>
+                                <div class="input-group">
+                                    <select name="budgetId" id="budget" class="form-control" required>
+                                        <option value="">Sélectionnez un budget</option>
                                     </select>
                                 </div>
 
