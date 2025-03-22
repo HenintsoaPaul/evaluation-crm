@@ -1,4 +1,4 @@
-package site.easy.to.build.crm.controller;
+package site.easy.to.build.crm.api.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,10 +18,6 @@ public class BudgetAlertConfigController {
 
     private final BudgetAlertConfigService budgetAlertConfigService;
 
-    // crud methods
-    // ...
-
-    // api methods
     @GetMapping
     public ResponseEntity<BudgetAlertConfig> getCurrent() {
         return ResponseEntity.ok(budgetAlertConfigService.findCurrent());

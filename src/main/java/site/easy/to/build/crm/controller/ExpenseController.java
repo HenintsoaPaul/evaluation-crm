@@ -34,11 +34,4 @@ public class ExpenseController {
         model.addAttribute("expenses", expenseService.findAll());
         return "expense/all-expenses";
     }
-
-    // api methods
-//    @GetMapping("/api")
-//    public ResponseEntity<List<Budget>> getBudgetsByCustomer(@RequestParam int customerId) {
-//        List<Budget> expenses = expenseService.findByCustomerId(customerId);
-//        return ResponseEntity.ok(expenses);
-//    }
 }
