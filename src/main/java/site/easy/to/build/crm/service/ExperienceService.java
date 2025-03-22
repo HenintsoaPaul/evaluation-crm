@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import site.easy.to.build.crm.entity.Budget;
 import site.easy.to.build.crm.entity.Expense;
 import site.easy.to.build.crm.entity.Ticket;
+import site.easy.to.build.crm.repository.BudgetRepository;
 import site.easy.to.build.crm.repository.ExpenseRepository;
 
 import java.time.LocalDateTime;
@@ -15,14 +16,14 @@ import java.time.LocalDateTime;
 public class ExperienceService {
 
     private final ExpenseRepository expenseRepository;
-    private final BudgetService budgetService;
+    private final BudgetRepository budgetRepository;
 
     @Transactional
-    public Expense save(Ticket ticket, int budgetId, double amountExpense) throws Exception {
+    public Expense save(Ticket ticket, Budget budget, double amountExpense) throws Exception {
         // update reste budget
-        Budget budget = budgetService.findById(budgetId);
-        budget.setAmountRemain(budget.getAmountRemain() - amountExpense);
-        budgetService.save(budget);
+        double remain = budget.getAmountRemain() - amountExpense;
+        budget.setAmountRemain(remain);
+        budgetRepository.save(budget);
 
         // insert expense
         Expense expense = new Expense();

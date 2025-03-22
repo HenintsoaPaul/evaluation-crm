@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class Expense {
     @Id
     @Column(name = "id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @NotNull
