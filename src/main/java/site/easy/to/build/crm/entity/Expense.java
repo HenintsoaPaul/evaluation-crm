@@ -2,7 +2,6 @@ package site.easy.to.build.crm.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -14,10 +13,6 @@ public class Expense {
     @Id
     @Column(name = "id", nullable = false)
     private Integer id;
-
-    @Size(max = 50)
-    @Column(name = "name", length = 50)
-    private String name;
 
     @NotNull
     @Column(name = "amount", nullable = false)
