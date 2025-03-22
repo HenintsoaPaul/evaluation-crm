@@ -7,6 +7,7 @@ import org.springframework.data.util.Pair;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
@@ -15,6 +16,9 @@ import site.easy.to.build.crm.entity.*;
 import site.easy.to.build.crm.entity.settings.TicketEmailSettings;
 import site.easy.to.build.crm.google.service.acess.GoogleAccessService;
 import site.easy.to.build.crm.google.service.gmail.GoogleGmailApiService;
+import site.easy.to.build.crm.service.BudgetAlertConfigService;
+import site.easy.to.build.crm.service.BudgetService;
+import site.easy.to.build.crm.service.ExpenseService;
 import site.easy.to.build.crm.service.customer.CustomerService;
 import site.easy.to.build.crm.service.settings.TicketEmailSettingsService;
 import site.easy.to.build.crm.service.ticket.TicketService;
@@ -41,11 +45,13 @@ public class TicketController {
     private final TicketEmailSettingsService ticketEmailSettingsService;
     private final GoogleGmailApiService googleGmailApiService;
     private final EntityManager entityManager;
-
+    private final BudgetAlertConfigService budgetAlertConfigService;
+    private final ExpenseService expenseService;
+    private final BudgetService budgetService;
 
     @Autowired
     public TicketController(TicketService ticketService, AuthenticationUtils authenticationUtils, UserService userService, CustomerService customerService,
-                            TicketEmailSettingsService ticketEmailSettingsService, GoogleGmailApiService googleGmailApiService, EntityManager entityManager) {
+                            TicketEmailSettingsService ticketEmailSettingsService, GoogleGmailApiService googleGmailApiService, EntityManager entityManager, BudgetAlertConfigService budgetAlertConfigService, ExpenseService expenseService, BudgetService budgetService) {
         this.ticketService = ticketService;
         this.authenticationUtils = authenticationUtils;
         this.userService = userService;
@@ -53,6 +59,9 @@ public class TicketController {
         this.ticketEmailSettingsService = ticketEmailSettingsService;
         this.googleGmailApiService = googleGmailApiService;
         this.entityManager = entityManager;
+        this.budgetAlertConfigService = budgetAlertConfigService;
+        this.expenseService = expenseService;
+        this.budgetService = budgetService;
     }
 
     @GetMapping("/show-ticket/{id}")
@@ -119,13 +128,17 @@ public class TicketController {
         model.addAttribute("employees",employees);
         model.addAttribute("customers",customers);
         model.addAttribute("ticket", new Ticket());
+        model.addAttribute("budgetAlertConfig", budgetAlertConfigService.findCurrent());
         return "ticket/create-ticket";
     }
 
+    @Transactional
     @PostMapping("/create-ticket")
     public String createTicket(@ModelAttribute("ticket") @Validated Ticket ticket, BindingResult bindingResult, @RequestParam("customerId") int customerId,
                                @RequestParam Map<String, String> formParams, Model model,
-                               @RequestParam("employeeId") int employeeId, Authentication authentication) {
+                               @RequestParam("employeeId") int employeeId, Authentication authentication,
+                               @RequestParam("amountExpense") double amountExpense,
+                               @RequestParam("budgetId") String budgetId) throws Exception {
 
         int userId = authenticationUtils.getLoggedInUserId(authentication);
         User manager = userService.findById(userId);
@@ -149,6 +162,7 @@ public class TicketController {
 
             model.addAttribute("employees",employees);
             model.addAttribute("customers",customers);
+            model.addAttribute("budgetAlertConfig", budgetAlertConfigService.findCurrent());
             return "ticket/create-ticket";
         }
 
@@ -169,7 +183,12 @@ public class TicketController {
         ticket.setEmployee(employee);
         ticket.setCreatedAt(LocalDateTime.now());
 
+        String trueBudgetId = budgetId.split("--", 3)[0];
+        Budget budget = budgetService.findById(Integer.parseInt(trueBudgetId));
+        ticket.setBudget(budget);
+
         ticketService.save(ticket);
+        expenseService.save(ticket, budget, amountExpense);
 
         return "redirect:/employee/ticket/assigned-tickets";
     }

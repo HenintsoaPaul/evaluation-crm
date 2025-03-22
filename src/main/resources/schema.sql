@@ -520,7 +520,6 @@ CREATE TABLE IF NOT EXISTS budget
 CREATE TABLE IF NOT EXISTS expense
 (
     id            INT AUTO_INCREMENT,
-    name          VARCHAR(50),
     amount        DECIMAL(15, 2) NOT NULL,
     creation_date DATETIME       NOT NULL,
     lead_id       INT unsigned,
@@ -531,6 +530,18 @@ CREATE TABLE IF NOT EXISTS expense
     FOREIGN KEY (lead_id) REFERENCES trigger_lead (lead_id),
     FOREIGN KEY (ticket_id) REFERENCES trigger_ticket (ticket_id)
 );
+
+ALTER TABLE trigger_ticket
+    ADD COLUMN budget_id INT,
+    ADD CONSTRAINT fk_nom_contrainte1
+        FOREIGN KEY (budget_id)
+            REFERENCES budget(id);
+
+ALTER TABLE trigger_lead
+    ADD COLUMN budget_id INT,
+    ADD CONSTRAINT fk_nom_contrainte2
+        FOREIGN KEY (budget_id)
+            REFERENCES budget(id);
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 

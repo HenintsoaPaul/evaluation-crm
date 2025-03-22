@@ -25,6 +25,9 @@ import site.easy.to.build.crm.google.service.acess.GoogleAccessService;
 import site.easy.to.build.crm.google.service.calendar.GoogleCalendarApiService;
 import site.easy.to.build.crm.google.service.drive.GoogleDriveApiService;
 import site.easy.to.build.crm.google.service.gmail.GoogleGmailApiService;
+import site.easy.to.build.crm.service.BudgetAlertConfigService;
+import site.easy.to.build.crm.service.BudgetService;
+import site.easy.to.build.crm.service.ExpenseService;
 import site.easy.to.build.crm.service.customer.CustomerService;
 import site.easy.to.build.crm.service.drive.GoogleDriveFileService;
 import site.easy.to.build.crm.service.file.FileService;
@@ -60,12 +63,15 @@ public class LeadController {
     private final LeadEmailSettingsService leadEmailSettingsService;
     private final GoogleGmailApiService googleGmailApiService;
     private final EntityManager entityManager;
+    private final BudgetAlertConfigService budgetAlertConfigService;
+    private final BudgetService budgetService;
+    private final ExpenseService expenseService;
 
     @Autowired
     public LeadController(LeadService leadService, AuthenticationUtils authenticationUtils, UserService userService, CustomerService customerService,
                           LeadActionService leadActionService, GoogleCalendarApiService googleCalendarApiService, FileService fileService,
                           GoogleDriveApiService googleDriveApiService, GoogleDriveFileService googleDriveFileService, FileUtil fileUtil,
-                          LeadEmailSettingsService leadEmailSettingsService, GoogleGmailApiService googleGmailApiService, EntityManager entityManager) {
+                          LeadEmailSettingsService leadEmailSettingsService, GoogleGmailApiService googleGmailApiService, EntityManager entityManager, BudgetAlertConfigService budgetAlertConfigService, BudgetAlertConfigService budgetAlertConfigService1, BudgetService budgetService, ExpenseService expenseService) {
         this.leadService = leadService;
         this.authenticationUtils = authenticationUtils;
         this.userService = userService;
@@ -79,6 +85,9 @@ public class LeadController {
         this.leadEmailSettingsService = leadEmailSettingsService;
         this.googleGmailApiService = googleGmailApiService;
         this.entityManager = entityManager;
+        this.budgetAlertConfigService = budgetAlertConfigService1;
+        this.budgetService = budgetService;
+        this.expenseService = expenseService;
     }
 
     @GetMapping("/show/{id}")
@@ -161,6 +170,7 @@ public class LeadController {
         }
         populateModelAttributes(model, authentication, user);
         model.addAttribute("lead", new Lead());
+        model.addAttribute("budgetAlertConfig", budgetAlertConfigService.findCurrent());
         return "lead/create-lead";
     }
 
@@ -168,7 +178,9 @@ public class LeadController {
     public String createLead(@ModelAttribute("lead") @Validated Lead lead, BindingResult bindingResult,
                              @RequestParam("customerId") int customerId, @RequestParam("employeeId") int employeeId,
                              Authentication authentication, @RequestParam("allFiles")@Nullable String files,
-                             @RequestParam("folderId") @Nullable String folderId, Model model) throws JsonProcessingException {
+                             @RequestParam("folderId") @Nullable String folderId, Model model,
+                             @RequestParam("budgetId") String budgetId,
+                             @RequestParam("amountExpense") double amountExpense) throws Exception {
 
         int userId = authenticationUtils.getLoggedInUserId(authentication);
         User manager = userService.findById(userId);
@@ -208,8 +220,14 @@ public class LeadController {
             }
         }
 
+        String trueBudgetId = budgetId.split("--", 3)[0];
+        Budget budget = budgetService.findById(Integer.parseInt(trueBudgetId));
+        lead.setBudget(budget);
+
         Lead createdLead = leadService.save(lead);
         fileUtil.saveFiles(allFiles, createdLead);
+
+        expenseService.save(lead, budget, amountExpense);
 
         if (lead.getGoogleDrive() != null) {
             fileUtil.saveGoogleDriveFiles(authentication, allFiles, folderId, createdLead);

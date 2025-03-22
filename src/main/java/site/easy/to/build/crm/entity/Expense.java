@@ -2,7 +2,6 @@ package site.easy.to.build.crm.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -13,11 +12,8 @@ import java.time.LocalDateTime;
 public class Expense {
     @Id
     @Column(name = "id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-
-    @Size(max = 50)
-    @Column(name = "name", length = 50)
-    private String name;
 
     @NotNull
     @Column(name = "amount", nullable = false)
@@ -27,12 +23,12 @@ public class Expense {
     @Column(name = "creation_date", nullable = false)
     private LocalDateTime creationDate;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "lead_id")
+    @ManyToOne
+    @JoinColumn(name = "lead_id", unique = true)
     private Lead lead;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ticket_id")
+    @ManyToOne
+    @JoinColumn(name = "ticket_id", unique = true)
     private Ticket ticket;
 
 }
