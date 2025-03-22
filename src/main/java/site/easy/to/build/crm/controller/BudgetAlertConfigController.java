@@ -8,7 +8,7 @@ import site.easy.to.build.crm.entity.BudgetAlertConfig;
 import site.easy.to.build.crm.service.BudgetAlertConfigService;
 
 @Controller
-@RequestMapping("/budget-alert-config")
+@RequestMapping("/api/budget-alert-config")
 @RequiredArgsConstructor
 public class BudgetAlertConfigController {
 
@@ -18,8 +18,13 @@ public class BudgetAlertConfigController {
     // ...
 
     // api methods
-    @GetMapping("/api")
+    @GetMapping
     public ResponseEntity<BudgetAlertConfig> getCurrent() {
         return ResponseEntity.ok(budgetAlertConfigService.findCurrent());
+    }
+
+    @PostMapping
+    public ResponseEntity<BudgetAlertConfig> create(@RequestParam double rate) {
+        return ResponseEntity.ok(budgetAlertConfigService.save(rate));
     }
 }
