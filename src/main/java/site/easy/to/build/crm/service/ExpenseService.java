@@ -69,8 +69,7 @@ public class ExpenseService {
 
     @Transactional
     public HashMap<String, Object> updateById(int expenseId, double newAmount) throws ApiServerException {
-        Expense expense = expenseRepository.findById(expenseId)
-                .orElseThrow(() -> new ApiServerException("Expense not found"));
+        Expense expense = this.findById(expenseId);
 
         Budget budget = expense.getTicket().getBudget();
 
@@ -86,5 +85,10 @@ public class ExpenseService {
         map.put("budget", budget);
 
         return map;
+    }
+
+    public Expense findById(int id) throws ApiServerException {
+        return expenseRepository.findById(id)
+                .orElseThrow(() -> new ApiServerException("Expense not found"));
     }
 }

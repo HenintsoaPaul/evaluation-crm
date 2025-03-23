@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/expense")
+@RequestMapping("/api/expenses")
 @RequiredArgsConstructor
 public class ExpenseApiController {
 
@@ -41,6 +41,12 @@ public class ExpenseApiController {
         return expenseService.findAll();
     }
 
+    @GetMapping("/{id}")
+    @JsonView({POV.Expense.class})
+    public Expense findById(@PathVariable int id) throws ApiServerException {
+        return expenseService.findById(id);
+    }
+
 //    @GetMapping("/by-client")
 //    public ResponseEntity<ApiResponse<?>> findByClient(@RequestParam int clientId) {
 //        List<Expense> expenses = expenseService.findByCustomerId(clientId);
@@ -54,8 +60,8 @@ public class ExpenseApiController {
         return expenseService.findByCustomerId(clientId);
     }
 
-    @PutMapping
-    public ResponseEntity<ApiResponse<?>> update(@RequestParam int expenseId, @RequestParam double newAmount) {
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<?>> update(@PathVariable(name = "id") int expenseId, @RequestParam double newAmount) {
         ApiResponse<?> response;
         try {
             HashMap<String, Object> map = expenseService.updateById(expenseId, newAmount);
@@ -82,8 +88,8 @@ public class ExpenseApiController {
         }
     }
 
-    @DeleteMapping
-    public ResponseEntity<ApiResponse<?>> delete(@RequestParam int expenseId) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<?>> delete(@PathVariable(name = "id") int expenseId) {
         ApiResponse<?> response;
         try {
             expenseService.deleteById(expenseId);
