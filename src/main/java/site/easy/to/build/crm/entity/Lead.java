@@ -1,9 +1,12 @@
 package site.easy.to.build.crm.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
+import site.easy.to.build.crm.api.POV;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,10 +18,12 @@ public class Lead {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "lead_id")
+    @JsonView(POV.Expense.class)
     private int leadId;
 
     @Column(name = "name")
     @NotBlank(message = "Name is required")
+    @JsonView(POV.Expense.class)
     private String name;
 
     @Column(name = "status")
@@ -49,23 +54,29 @@ public class Lead {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonView(POV.Expense.class)
     private User manager;
 
     @ManyToOne
     @JoinColumn(name = "employee_id")
+    @JsonView(POV.Expense.class)
     private User employee;
 
     @ManyToOne
     @JoinColumn(name = "customer_id")
+    @JsonView(POV.Expense.class)
     private Customer customer;
 
     @Column(name = "created_at")
+    @JsonView(POV.Expense.class)
     private LocalDateTime createdAt;
 
     @ManyToOne
     @JoinColumn(name = "budget_id")
+    @JsonView(POV.Expense.class)
     private Budget budget;
 
+    @JsonBackReference
     @OneToOne(mappedBy = "lead")
     private Expense expense;
 
