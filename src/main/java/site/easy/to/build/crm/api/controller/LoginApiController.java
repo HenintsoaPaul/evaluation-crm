@@ -10,7 +10,6 @@ import site.easy.to.build.crm.api.dto.LoginRequest;
 import site.easy.to.build.crm.api.dto.LoginResponse;
 import site.easy.to.build.crm.entity.*;
 import site.easy.to.build.crm.repository.UserRepository;
-import site.easy.to.build.crm.service.user.UserServiceImpl;
 
 import java.util.List;
 
@@ -20,12 +19,11 @@ import java.util.List;
 public class LoginApiController {
 
     private final UserRepository userRepository;
-    private final UserServiceImpl userService;
     private final PasswordEncoder passwordEncoder;
     private final List<String> unauthorized = List.of("ROLE_CUSTOMER");
 
     @PostMapping
-    public ResponseEntity<LoginResponse> authenticate(
+    public ResponseEntity<ApiResponse<?>> authenticate(
             @RequestBody LoginRequest loginRequest
     ) {
         LoginResponse response = new LoginResponse(loginRequest.getUsername());
@@ -52,13 +50,13 @@ public class LoginApiController {
             response.setAuthenticated(true);
             response.setError(null);
 
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(new ApiOkResponse<>("Connexion ok!", response));
 
         } catch (ApiServerException e) {
             response.setAuthenticated(false);
             response.setError(e.getMessage());
 
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiBadResponse<>("Connexion echoue!", response), HttpStatus.BAD_REQUEST);
         }
     }
 
