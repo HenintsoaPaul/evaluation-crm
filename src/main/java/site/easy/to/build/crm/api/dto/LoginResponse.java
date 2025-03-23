@@ -9,6 +9,10 @@ public class LoginResponse {
     private boolean authenticated;
     private String error;
 
+    private int id;
+    private String email;
+    private String role;
+
     public LoginResponse(String username) {
         this.username = username;
         this.authenticated = true;

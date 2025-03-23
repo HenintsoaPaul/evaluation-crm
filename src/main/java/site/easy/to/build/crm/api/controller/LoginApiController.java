@@ -41,14 +41,15 @@ public class LoginApiController {
                 throw new ApiServerException("Account inactive");
             }
 
-            for (Role role : user.getRoles()) {
-                if (unauthorized.contains(role.getName())) {
-                    throw new ApiServerException("Account customer unauthorized");
-                }
+            if (unauthorized.contains(user.getUsername())) {
+                throw new ApiServerException("Account not authorized");
             }
 
             response.setAuthenticated(true);
             response.setError(null);
+            response.setId(user.getId());
+            response.setEmail(user.getEmail());
+            response.setRole(user.getRoles().get(0).getName());
 
             return ResponseEntity.ok(new ApiOkResponse<>("Connexion ok!", response));
 
