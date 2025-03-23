@@ -3,7 +3,6 @@ package site.easy.to.build.crm.api.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import site.easy.to.build.crm.api.ApiBadResponse;
 import site.easy.to.build.crm.api.ApiOkResponse;
@@ -12,7 +11,7 @@ import site.easy.to.build.crm.entity.BudgetAlertConfig;
 import site.easy.to.build.crm.service.BudgetAlertConfigService;
 
 @RestController
-@RequestMapping("/api/budget-alert-config")
+@RequestMapping("/api/budget-alert-configs")
 @RequiredArgsConstructor
 public class BudgetAlertConfigApiController {
 
