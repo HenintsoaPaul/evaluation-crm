@@ -330,10 +330,10 @@
                 $('#erreurAlerteBudget').html('');
             }
 
-            if (futurRemain < 0) {
+            if (isDepassementBudget) {
                 $('#erreurDepassementBudget').html(`
     Depassement de budget!<br>
-    Montant restant: ${debutAlerte}<br>
+    Montant restant: ${amountRemain}<br>
     Montant demandé: ${amount}<br>
     Montant restant après cette opération: ${futurRemain}
 `);
