@@ -87,7 +87,11 @@ public class BudgetController {
             return "error/account-inactive";
         }
 
-        populateModelAttributes(model, authentication, user);
+        if (!AuthorizationUtil.hasRole(authentication, "ROLE_MANAGER")) {
+            return "error/access-denied";
+        }
+
+        populateModelAttributes(model);
 
         model.addAttribute("budget", new Budget());
         return "budget/create-budget";
