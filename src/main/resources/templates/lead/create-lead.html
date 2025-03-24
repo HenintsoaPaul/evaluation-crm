@@ -165,12 +165,38 @@
                                     </select>
                                 </div>
 
-                                <!--budget_alert_config-->
-                                <label class="m-t-20" for="budget_alert_config">Alerte (%):</label>
-                                <div class="input-group">
-                                    <input type="text" id="budget_alert_config" name="budget_alert_config"
-                                           class="form-control"
-                                           readonly th:value="${budgetAlertConfig.rate}">
+                                <div class="row">
+                                    <!--budget_alert_config-->
+                                    <div class="col-6">
+                                        <label class="m-t-20" for="budget_alert_config">Alerte (%):</label>
+                                        <div class="input-group">
+                                            <input type="text" id="budget_alert_config"
+                                                   class="form-control"
+                                                   readonly
+                                                   th:value="${budgetAlertConfig.rate}">
+                                        </div>
+                                        <label class="m-t-20" for="amount_alerte">Amount Alert:</label>
+                                        <div class="input-group">
+                                            <input type="number" id="amount_alerte"
+                                                   class="form-control"
+                                                   readonly>
+                                        </div>
+                                    </div>
+                                    <!--budget-->
+                                    <div class="col-6">
+                                        <label class="m-t-20" for="amount_limit">Amount Limit:</label>
+                                        <div class="input-group">
+                                            <input type="number" id="amount_limit"
+                                                   class="form-control"
+                                                   readonly>
+                                        </div>
+                                        <label class="m-t-20" for="amount_remain">Amount Remain:</label>
+                                        <div class="input-group">
+                                            <input type="number" id="amount_remain"
+                                                   class="form-control"
+                                                   readonly>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <label class="m-t-20"><i class="ti-link"></i> Attachment</label>
@@ -254,7 +280,7 @@
 <!-- ============================================================== -->
 <!-- All Jquery -->
 <!-- ============================================================== -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script th:src="@{/js/library/jquery-3.2.1.min.js}" type="text/javascript"></script>
 <script th:inline="javascript">
     const home = /*[[${home}]]*/ null;
     const tauxAlerte = /*[[${budgetAlertConfig.rate}]]*/ null;
@@ -295,6 +321,25 @@
             } else {
                 $('#budget').empty();
                 $('#budget').append($('<option></option>').text('Sélectionnez un budget'));
+            }
+        });
+
+        // update budget inputs
+        $('#budget').change(function () {
+            const budgetId = $(this).val();
+
+            const parts = $(this).val().split("--");
+            const amountLimit = parseFloat(parts[1]);
+            const amountRemain = parseFloat(parts[2]);
+
+            if (budgetId !== "") {
+                $('#amount_alerte').attr('value', amountLimit * (tauxAlerte / 100));
+                $('#amount_limit').attr('value', amountLimit);
+                $('#amount_remain').attr('value', amountRemain);
+            } else {
+                $('#amount_alerte').attr('value', null);
+                $('#amount_limit').attr('value', null);
+                $('#amount_remain').attr('value', null);
             }
         });
 
@@ -365,7 +410,6 @@
     });
 </script>
 
-<script th:src="@{/js/library/jquery-3.2.1.min.js}" type="text/javascript">></script>
 <!--    &lt;!&ndash; Bootstrap tether Core JavaScript &ndash;&gt;-->
 <script th:src="@{/js/library/popper.min.js}" type="text/javascript">></script>
 <script th:src="@{/js/library/bootstrap.min.js}" type="text/javascript">></script>
