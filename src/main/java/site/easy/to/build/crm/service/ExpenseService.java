@@ -59,9 +59,9 @@ public class ExpenseService {
     @Transactional
     public Expense update(Expense expense) {
         HistoExpense histoExpense = new HistoExpense();
-        histoExpense.setExpense(expense);
-        histoExpense.setAmount(histoExpense.getAmount());
+        histoExpense.setAmount(expense.getAmount());
         histoExpense.setCreationDate(LocalDateTime.now());
+        histoExpense.setExpense(expense);
 
         histoExpenseService.save(histoExpense);
 

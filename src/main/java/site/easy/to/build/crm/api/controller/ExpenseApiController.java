@@ -72,8 +72,11 @@ public class ExpenseApiController {
         return expenseService.findByCustomerId(clientId);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<?>> update(@PathVariable(name = "id") int expenseId, @RequestParam double newAmount) {
+    @PostMapping("/update/{id}")
+    public ResponseEntity<ApiResponse<?>> update(
+            @PathVariable(name = "id") int expenseId,
+            @RequestParam double newAmount
+    ) throws ApiServerException {
         ApiResponse<?> response;
         try {
             HashMap<String, Object> map = expenseService.updateById(expenseId, newAmount);
