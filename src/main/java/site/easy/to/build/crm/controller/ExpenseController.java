@@ -9,6 +9,7 @@ import site.easy.to.build.crm.entity.User;
 import site.easy.to.build.crm.service.ExpenseService;
 import site.easy.to.build.crm.service.user.UserServiceImpl;
 import site.easy.to.build.crm.util.AuthenticationUtils;
+import site.easy.to.build.crm.util.AuthorizationUtil;
 
 @Controller
 @RequestMapping("/expense")
@@ -26,9 +27,13 @@ public class ExpenseController {
             Authentication authentication
     ) {
         int userId = authenticationUtils.getLoggedInUserId(authentication);
-        User user = userService.findById(userId);
-        if (user.isInactiveUser()) {
+        User loggedUser = userService.findById(userId);
+        if (loggedUser.isInactiveUser()) {
             return "error/account-inactive";
+        }
+
+        if (!AuthorizationUtil.hasRole(authentication, "ROLE_MANAGER")) {
+            return "error/access-denied";
         }
 
         model.addAttribute("expenses", expenseService.findAll());
