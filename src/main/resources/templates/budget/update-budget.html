@@ -71,7 +71,7 @@
                     <div class="card">
                         <div class="card-body">
                             <h4 class="card-title" th:text="'Update ' + ${budget.name} + ' budget'"></h4>
-                            <form th:object="${budget}" id="email-form" th:action="@{/budget/save-budget}"
+                            <form th:object="${budget}" id="email-form" th:action="@{/budget/update-budget}"
                                   method="post">
                                 <input type="hidden" th:field="*{id}">
 
