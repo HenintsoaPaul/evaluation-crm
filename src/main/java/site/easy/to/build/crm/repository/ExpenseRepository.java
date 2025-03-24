@@ -21,4 +21,10 @@ public interface ExpenseRepository extends JpaRepository<Expense, Integer> {
             )
             """, nativeQuery = true)
     List<Expense> findByCustomerId(int customerId);
+
+    @Query(value = "SELECT e FROM Expense e WHERE e.ticket is not null")
+    List<Expense> findAllTickets();
+
+    @Query(value = "SELECT e FROM Expense e WHERE e.lead is not null")
+    List<Expense> findAllLeads();
 }

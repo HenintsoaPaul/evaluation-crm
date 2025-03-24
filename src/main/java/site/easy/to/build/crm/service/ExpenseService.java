@@ -91,4 +91,12 @@ public class ExpenseService {
         return expenseRepository.findById(id)
                 .orElseThrow(() -> new ApiServerException("Expense not found"));
     }
+
+    public List<Expense> findAllTickets() {
+        return expenseRepository.findAllTickets();
+    }
+
+    public List<Expense> findAllLeads() {
+        return expenseRepository.findAllLeads();
+    }
 }
