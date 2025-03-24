@@ -20,12 +20,12 @@ public class Customer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "customer_id")
-    @JsonView(POV.Expense.class)
+    @JsonView({POV.Expense.class, POV.Dashboard.class})
     private Integer customerId;
 
     @Column(name = "name")
     @NotBlank(message = "Name is required", groups = {Default.class, CustomerUpdateValidationGroupInclusion.class})
-    @JsonView(POV.Expense.class)
+    @JsonView({POV.Expense.class, POV.Dashboard.class})
     private String name;
 
     @Column(name = "email")

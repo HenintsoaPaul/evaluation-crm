@@ -6,10 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import site.easy.to.build.crm.entity.HistoExpense;
 import site.easy.to.build.crm.api.ApiServerException;
 import site.easy.to.build.crm.entity.*;
-import site.easy.to.build.crm.repository.BudgetRepository;
-import site.easy.to.build.crm.repository.ExpenseRepository;
-import site.easy.to.build.crm.repository.LeadRepository;
-import site.easy.to.build.crm.repository.TicketRepository;
+import site.easy.to.build.crm.repository.*;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -25,6 +22,7 @@ public class ExpenseService {
     private final HistoExpenseService histoExpenseService;
     private final LeadRepository leadRepository;
     private final TicketRepository ticketRepository;
+    private final CustomerRepository customerRepository;
 
     private void decreaseBudgetRemaining(Budget budget, double amountExpense) {
         double remain = budget.getAmountRemain() - amountExpense;
@@ -132,5 +130,9 @@ public class ExpenseService {
 
     public List<Expense> findAllLeads() {
         return expenseRepository.findAllLeads();
+    }
+
+    public List<Customer> findAllCustomers() {
+        return customerRepository.findAll();
     }
 }

@@ -26,11 +26,12 @@ public class ExpenseApiController {
 
     @GetMapping("/dashboard")
     @JsonView({POV.Dashboard.class})
-    public HashMap<String, List<Expense>> findDashboardData() {
-        HashMap<String, List<Expense>> maps = new HashMap<>();
+    public HashMap<String, List<?>> findDashboardData() {
+        HashMap<String, List<?>> maps = new HashMap<>();
         maps.put("all", expenseService.findAll());
         maps.put("lead", expenseService.findAllLeads());
         maps.put("ticket", expenseService.findAllTickets());
+        maps.put("customer", expenseService.findAllCustomers());
 
         return maps;
     }
