@@ -36,9 +36,13 @@ public class BudgetController {
             Authentication authentication
     ) {
         int userId = authenticationUtils.getLoggedInUserId(authentication);
-        User user = userService.findById(userId);
-        if (user.isInactiveUser()) {
+        User loggedInUser = userService.findById(userId);
+        if (loggedInUser.isInactiveUser()) {
             return "error/account-inactive";
+        }
+
+        if (!AuthorizationUtil.hasRole(authentication, "ROLE_MANAGER")) {
+            return "error/access-denied";
         }
 
         model.addAttribute("budgets", budgetService.findAll());
