@@ -3,6 +3,7 @@ package site.easy.to.build.crm.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import site.easy.to.build.crm.entity.HistoExpense;
 import site.easy.to.build.crm.api.ApiServerException;
 import site.easy.to.build.crm.entity.*;
 import site.easy.to.build.crm.repository.BudgetRepository;
@@ -19,6 +20,7 @@ public class ExpenseService {
     private final ExpenseRepository expenseRepository;
     private final BudgetRepository budgetRepository;
     private final DataDeleteService dataDeleteService;
+    private final HistoExpenseService histoExpenseService;
 
     private void decreaseBudgetRemaining(Budget budget, double amountExpense) {
         double remain = budget.getAmountRemain() - amountExpense;
@@ -51,7 +53,14 @@ public class ExpenseService {
     }
 
     @Transactional
-    public Expense save(Expense expense) {
+    public Expense update(Expense expense) {
+        HistoExpense histoExpense = new HistoExpense();
+        histoExpense.setExpense(expense);
+        histoExpense.setAmount(histoExpense.getAmount());
+        histoExpense.setCreationDate(LocalDateTime.now());
+
+        histoExpenseService.save(histoExpense);
+
         return expenseRepository.save(expense);
     }
 

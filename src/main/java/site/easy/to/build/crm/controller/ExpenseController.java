@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import site.easy.to.build.crm.entity.Expense;
@@ -97,7 +96,7 @@ public class ExpenseController {
             assert originalExpense != null;
 
             originalExpense.setAmount(newAmount);
-            expenseService.save(originalExpense);
+            expenseService.update(originalExpense);
             redirectAttributes.addFlashAttribute("message", "Expense updated successfully");
         } catch (Exception e) {
             e.printStackTrace();
