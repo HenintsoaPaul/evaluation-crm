@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import site.easy.to.build.crm.entity.Budget;
@@ -71,7 +73,6 @@ public class BudgetController {
         }
 
         populateModelAttributes(model);
-
         model.addAttribute("budget", budget);
         return "budget/update-budget";
     }
@@ -92,19 +93,73 @@ public class BudgetController {
         }
 
         populateModelAttributes(model);
-
         model.addAttribute("budget", new Budget());
         return "budget/create-budget";
     }
 
-    @PostMapping("/save-budget")
+    @PostMapping("/create-budget")
     public String processFormd(
-            @ModelAttribute("budget") Budget budget,
-            RedirectAttributes redirectAttributes
+            @ModelAttribute("budget") @Validated Budget budget,
+            BindingResult bindingResult,
+            RedirectAttributes redirectAttributes,
+            Authentication authentication,
+            Model model
     ) {
+        int userId = authenticationUtils.getLoggedInUserId(authentication);
+        User manager = userService.findById(userId);
+        if (manager == null || budget == null) {
+            return "error/500";
+        } else if (manager.isInactiveUser()) {
+            return "error/account-inactive";
+        }
+
+        if (!AuthorizationUtil.hasRole(authentication, "ROLE_MANAGER")) {
+            return "error/access-denied";
+        }
+
+        if (bindingResult.hasErrors()) {
+            populateModelAttributes(model);
+            return "budget/create-budget";
+        }
+
         try {
             budgetService.save(budget);
             redirectAttributes.addFlashAttribute("message", "Budget created successfully");
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/budget";
+    }
+
+    @PostMapping("/update-budget")
+    public String processFormUpdate(
+            @ModelAttribute("budget") @Validated Budget budget,
+            BindingResult bindingResult,
+            RedirectAttributes redirectAttributes,
+            Authentication authentication,
+            Model model
+    ) {
+        int userId = authenticationUtils.getLoggedInUserId(authentication);
+        User manager = userService.findById(userId);
+        if (manager == null || budget == null) {
+            return "error/500";
+        } else if (manager.isInactiveUser()) {
+            return "error/account-inactive";
+        }
+
+        if (!AuthorizationUtil.hasRole(authentication, "ROLE_MANAGER")) {
+            return "error/access-denied";
+        }
+
+        if (bindingResult.hasErrors()) {
+            populateModelAttributes(model);
+            return "budget/update-budget";
+        }
+
+        try {
+            budgetService.save(budget);
+            redirectAttributes.addFlashAttribute("message", "Budget updated successfully");
         } catch (Exception e) {
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("error", e.getMessage());
