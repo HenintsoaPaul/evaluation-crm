@@ -5,10 +5,16 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import site.easy.to.build.crm.entity.Budget;
+import site.easy.to.build.crm.entity.Expense;
 import site.easy.to.build.crm.entity.User;
+import site.easy.to.build.crm.repository.ExpenseRepository;
+import site.easy.to.build.crm.service.BudgetAlertConfigService;
 import site.easy.to.build.crm.service.ExpenseService;
 import site.easy.to.build.crm.service.user.UserServiceImpl;
 import site.easy.to.build.crm.util.AuthenticationUtils;
+import site.easy.to.build.crm.util.AuthorizationUtil;
 
 @Controller
 @RequestMapping("/expense")
@@ -18,6 +24,8 @@ public class ExpenseController {
     private final ExpenseService expenseService;
     private final AuthenticationUtils authenticationUtils;
     private final UserServiceImpl userService;
+    private final ExpenseRepository expenseRepository;
+    private final BudgetAlertConfigService budgetAlertConfigService;
 
     // crud methods
     @GetMapping
@@ -26,19 +34,78 @@ public class ExpenseController {
             Authentication authentication
     ) {
         int userId = authenticationUtils.getLoggedInUserId(authentication);
-        User user = userService.findById(userId);
-        if (user.isInactiveUser()) {
+        User loggedUser = userService.findById(userId);
+        if (loggedUser.isInactiveUser()) {
             return "error/account-inactive";
+        }
+
+        if (!AuthorizationUtil.hasRole(authentication, "ROLE_MANAGER")) {
+            return "error/access-denied";
         }
 
         model.addAttribute("expenses", expenseService.findAll());
         return "expense/all-expenses";
     }
 
-    // api methods
-//    @GetMapping("/api")
-//    public ResponseEntity<List<Budget>> getBudgetsByCustomer(@RequestParam int customerId) {
-//        List<Budget> expenses = expenseService.findByCustomerId(customerId);
-//        return ResponseEntity.ok(expenses);
-//    }
+    @GetMapping("/update-expense/{id}")
+    public String showFormUpdate(
+            Model model,
+            Authentication authentication,
+            @PathVariable int id
+    ) {
+        int userId = authenticationUtils.getLoggedInUserId(authentication);
+        User loggedUser = userService.findById(userId);
+        if (loggedUser.isInactiveUser()) {
+            return "error/account-inactive";
+        }
+
+        if (!AuthorizationUtil.hasRole(authentication, "ROLE_MANAGER")) {
+            return "error/access-denied";
+        }
+
+        Expense expense = expenseRepository.findById(id).orElse(null);
+        if (expense == null) {
+            return "error/not-found";
+        }
+
+        Budget budget;
+        if (expense.getLead() == null) {
+            budget = expense.getTicket().getBudget();
+        } else {
+            budget = expense.getLead().getBudget();
+        }
+
+        model.addAttribute("budgetAlertConfig", budgetAlertConfigService.findCurrent());
+        model.addAttribute("budget", budget);
+        model.addAttribute("expense", expense);
+        return "expense/update-expense";
+    }
+
+    @PostMapping("/update-expense")
+    public String processFormUpdate(
+            @ModelAttribute("expense") Expense expense,
+            RedirectAttributes redirectAttributes,
+            Authentication authentication
+    ) {
+        int userId = authenticationUtils.getLoggedInUserId(authentication);
+        User manager = userService.findById(userId);
+        if (manager == null || expense == null) {
+            return "error/500";
+        } else if (manager.isInactiveUser()) {
+            return "error/account-inactive";
+        }
+
+        if (!AuthorizationUtil.hasRole(authentication, "ROLE_MANAGER")) {
+            return "error/access-denied";
+        }
+
+        try {
+            expenseService.updateById(expense.getId(), expense.getAmount());
+            redirectAttributes.addFlashAttribute("message", "Expense updated successfully");
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/expense";
+    }
 }
