@@ -61,12 +61,16 @@ public class BudgetController {
             return "error/account-inactive";
         }
 
+        if (!AuthorizationUtil.hasRole(authentication, "ROLE_MANAGER")) {
+            return "error/access-denied";
+        }
+
         Budget budget = budgetService.findById(id);
         if (budget == null) {
             return "error/not-found";
         }
 
-        populateModelAttributes(model, authentication, user);
+        populateModelAttributes(model);
 
         model.addAttribute("budget", budget);
         return "budget/update-budget";
@@ -112,19 +116,8 @@ public class BudgetController {
     }
 
     //    methods
-    private void populateModelAttributes(Model model, Authentication authentication, User loggedInUser) {
-        List<User> employees = new ArrayList<>();
-        List<Customer> customers;
-
-        if (AuthorizationUtil.hasRole(authentication, "ROLE_MANAGER")) {
-            employees = userService.findAll();
-            customers = customerService.findAll();
-        } else {
-            employees.add(loggedInUser);
-            customers = customerService.findByUserId(loggedInUser.getId());
-        }
-
-        model.addAttribute("employees", employees);
-        model.addAttribute("customers", customers);
+    private void populateModelAttributes(Model model) {
+        model.addAttribute("employees", userService.findAll());
+        model.addAttribute("customers", customerService.findAll());
     }
 }
