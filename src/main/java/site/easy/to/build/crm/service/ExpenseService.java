@@ -85,7 +85,12 @@ public class ExpenseService {
     public HashMap<String, Object> updateById(int expenseId, double newAmount) throws ApiServerException {
         Expense expense = this.findById(expenseId);
 
-        Budget budget = expense.getTicket().getBudget();
+        Budget budget;
+        if (expense.getLead() == null) {
+            budget = expense.getTicket().getBudget();
+        } else {
+            budget = expense.getLead().getBudget();
+        }
 
         double oldAmount = expense.getAmount(),
                 oldBudgetRemain = budget.getAmountRemain(),
@@ -97,6 +102,9 @@ public class ExpenseService {
         HashMap<String, Object> map = new HashMap<>();
         map.put("expense", expense);
         map.put("budget", budget);
+
+        budgetRepository.save(budget);
+        this.update(expense);
 
         return map;
     }

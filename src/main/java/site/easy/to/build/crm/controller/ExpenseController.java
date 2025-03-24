@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import site.easy.to.build.crm.entity.Budget;
 import site.easy.to.build.crm.entity.Expense;
 import site.easy.to.build.crm.entity.User;
 import site.easy.to.build.crm.repository.ExpenseRepository;
@@ -67,7 +68,15 @@ public class ExpenseController {
             return "error/not-found";
         }
 
-        model.addAttribute("config", budgetAlertConfigService.findCurrent());
+        Budget budget;
+        if (expense.getLead() == null) {
+            budget = expense.getTicket().getBudget();
+        } else {
+            budget = expense.getLead().getBudget();
+        }
+
+        model.addAttribute("budgetAlertConfig", budgetAlertConfigService.findCurrent());
+        model.addAttribute("budget", budget);
         model.addAttribute("expense", expense);
         return "expense/update-expense";
     }
@@ -91,12 +100,7 @@ public class ExpenseController {
         }
 
         try {
-            double newAmount = expense.getAmount();
-            Expense originalExpense = expenseRepository.findById(expense.getId()).orElse(null);
-            assert originalExpense != null;
-
-            originalExpense.setAmount(newAmount);
-            expenseService.update(originalExpense);
+            expenseService.updateById(expense.getId(), expense.getAmount());
             redirectAttributes.addFlashAttribute("message", "Expense updated successfully");
         } catch (Exception e) {
             e.printStackTrace();
