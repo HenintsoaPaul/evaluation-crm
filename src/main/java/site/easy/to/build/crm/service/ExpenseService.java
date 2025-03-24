@@ -8,6 +8,8 @@ import site.easy.to.build.crm.api.ApiServerException;
 import site.easy.to.build.crm.entity.*;
 import site.easy.to.build.crm.repository.BudgetRepository;
 import site.easy.to.build.crm.repository.ExpenseRepository;
+import site.easy.to.build.crm.repository.LeadRepository;
+import site.easy.to.build.crm.repository.TicketRepository;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -21,6 +23,8 @@ public class ExpenseService {
     private final BudgetRepository budgetRepository;
     private final DataDeleteService dataDeleteService;
     private final HistoExpenseService histoExpenseService;
+    private final LeadRepository leadRepository;
+    private final TicketRepository ticketRepository;
 
     private void decreaseBudgetRemaining(Budget budget, double amountExpense) {
         double remain = budget.getAmountRemain() - amountExpense;
@@ -75,8 +79,16 @@ public class ExpenseService {
 
     @Transactional
     public void deleteById(int expenseId) throws ApiServerException {
-        expenseRepository.findById(expenseId)
+        Expense e = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new ApiServerException("Expense not found"));
+
+        Lead lead = e.getLead();
+        Ticket ticket = e.getTicket();
+        if (lead == null) {
+            ticketRepository.deleteById(ticket.getTicketId());
+        } else if (ticket == null) {
+            leadRepository.deleteById(lead.getLeadId());
+        }
 
         dataDeleteService.deleteRowCascade("expense", expenseId + "");
     }
