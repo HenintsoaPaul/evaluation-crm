@@ -24,21 +24,33 @@ public class ExpenseApiController {
     private final ExpenseService expenseService;
     private final BudgetAlertConfigService budgetAlertConfigService;
 
-//    @GetMapping
-//    public ResponseEntity<ApiResponse<?>> findAll() {
-//        List<Expense> expenses = expenseService.findAll();
-//
-//        MappingJacksonValue body = new MappingJacksonValue(expenses);
-//        body.setSerializationView(POV.Expense.class);
-//
-//        ApiResponse<?> response = new ApiOkResponse<>("Toutes les depenses.", body);
-//        return ResponseEntity.ok(response);
-//    }
+    @GetMapping("/dashboard")
+    @JsonView({POV.Dashboard.class})
+    public HashMap<String, List<Expense>> findDashboardData() {
+        HashMap<String, List<Expense>> maps = new HashMap<>();
+        maps.put("all", expenseService.findAll());
+        maps.put("lead", expenseService.findAllLeads());
+        maps.put("ticket", expenseService.findAllTickets());
+
+        return maps;
+    }
 
     @GetMapping
     @JsonView({POV.Expense.class})
     public List<Expense> findAll() {
         return expenseService.findAll();
+    }
+
+    @GetMapping("/tickets")
+    @JsonView({POV.Expense.class})
+    public List<Expense> findAllTickets() {
+        return expenseService.findAllTickets();
+    }
+
+    @GetMapping("/leads")
+    @JsonView({POV.Expense.class})
+    public List<Expense> findAllLeads() {
+        return expenseService.findAllLeads();
     }
 
     @GetMapping("/{id}")

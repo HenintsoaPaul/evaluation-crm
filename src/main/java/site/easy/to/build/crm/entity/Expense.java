@@ -16,17 +16,17 @@ public class Expense {
     @Id
     @Column(name = "id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JsonView(POV.Expense.class)
+    @JsonView({POV.Expense.class, POV.Dashboard.class})
     private Integer id;
 
     @NotNull
     @Column(name = "amount", nullable = false)
-    @JsonView(POV.Expense.class)
+    @JsonView({POV.Expense.class, POV.Dashboard.class})
     private Double amount;
 
     @NotNull
     @Column(name = "creation_date", nullable = false)
-    @JsonView(POV.Expense.class)
+    @JsonView({POV.Expense.class, POV.Dashboard.class})
     private LocalDateTime creationDate;
 
     @OneToOne
