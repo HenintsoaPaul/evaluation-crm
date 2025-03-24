@@ -50,6 +50,11 @@ public class ExpenseService {
         return expenseRepository.save(expense);
     }
 
+    @Transactional
+    public Expense save(Expense expense) {
+        return expenseRepository.save(expense);
+    }
+
     @Transactional(readOnly = true)
     public List<Expense> findAll() {
         return expenseRepository.findAll();

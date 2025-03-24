@@ -3,6 +3,7 @@ package site.easy.to.build.crm.entity;
 import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import site.easy.to.build.crm.api.POV;
@@ -19,7 +20,8 @@ public class Expense {
     @JsonView({POV.Expense.class, POV.Dashboard.class})
     private Integer id;
 
-    @NotNull
+    @NotNull(message = "Amount cannot be null")
+    @Min(value = 0, message = "Min amount is 0")
     @Column(name = "amount", nullable = false)
     @JsonView({POV.Expense.class, POV.Dashboard.class})
     private Double amount;
