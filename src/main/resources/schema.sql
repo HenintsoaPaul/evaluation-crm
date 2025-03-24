@@ -531,6 +531,16 @@ CREATE TABLE IF NOT EXISTS expense
     FOREIGN KEY (ticket_id) REFERENCES trigger_ticket (ticket_id)
 );
 
+CREATE TABLE histo_expense
+(
+    id            INT AUTO_INCREMENT,
+    amount        DECIMAL(15, 2) NOT NULL,
+    creation_date DATETIME       NOT NULL,
+    expense_id    INT            NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (expense_id) REFERENCES expense (id)
+);
+
 ALTER TABLE trigger_ticket
     ADD COLUMN budget_id INT,
     ADD CONSTRAINT fk_nom_contrainte1
