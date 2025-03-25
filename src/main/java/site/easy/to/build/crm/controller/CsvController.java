@@ -3,8 +3,6 @@ package site.easy.to.build.crm.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -12,8 +10,10 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import site.easy.to.build.crm.csv.CsvValidationException;
 import site.easy.to.build.crm.entity.Customer;
+import site.easy.to.build.crm.entity.Expense;
 import site.easy.to.build.crm.entity.OAuthUser;
 import site.easy.to.build.crm.entity.User;
+import site.easy.to.build.crm.service.ExpenseService;
 import site.easy.to.build.crm.service.customer.CustomerServiceImpl;
 import site.easy.to.build.crm.service.user.UserServiceImpl;
 import site.easy.to.build.crm.util.AuthenticationUtils;
@@ -25,6 +25,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CsvController {
 
+    private final ExpenseService expenseService;
     private final UserServiceImpl userService;
     private final CustomerServiceImpl customerService;
     private final AuthenticationUtils authenticationUtils;
@@ -81,6 +82,34 @@ public class CsvController {
             ex.printStackTrace();
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }
-        return "redirect:/manager/register-user";
+        return "redirect:/data/management/izy";
+    }
+
+    @PostMapping("/fichier1")
+    public String fichier1(
+            @RequestParam("file") MultipartFile file,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes
+    ) {
+        try {
+            int userId = authenticationUtils.getLoggedInUserId(authentication);
+            User loggedInUser = userService.findById(userId);
+            if (loggedInUser.isInactiveUser()) {
+                return "error/account-inactive";
+            }
+
+            // import csv
+            List<Expense> expenses = expenseService.importCsv(file, loggedInUser);
+
+            String msg = "Fichier CSV traité avec succès : " + expenses.size() + " lignes insérées";
+            redirectAttributes.addFlashAttribute("messageImp", msg);
+        } catch (CsvValidationException e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorImp", e.getErrors());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorImp", ex.getMessage());
+        }
+        return "redirect:/data/management/izy";
     }
 }
