@@ -33,33 +33,7 @@ public class CsvController {
     private final CustomerServiceImpl customerService;
     private final AuthenticationUtils authenticationUtils;
     private final BudgetService budgetService;
-
-    @PostMapping("/user")
-    public String csvEspace(
-            @RequestParam("file") MultipartFile file,
-            Authentication authentication,
-            RedirectAttributes redirectAttributes
-    ) {
-        try {
-            int userId = authenticationUtils.getLoggedInUserId(authentication);
-            User loggedInUser = userService.findById(userId);
-            if (loggedInUser.isInactiveUser()) {
-                return "error/account-inactive";
-            }
-            OAuthUser oAuthUser = authenticationUtils.getOAuthUserFromAuthentication(authentication);
-
-            List<User> users = userService.importCsv(file, oAuthUser);
-
-            String msg = "Fichier CSV traité avec succès : " + users.size() + " lignes insérées";
-            redirectAttributes.addFlashAttribute("message", msg);
-        } catch (CsvValidationException e) {
-            redirectAttributes.addFlashAttribute("validationErrors", e.getErrors());
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            redirectAttributes.addFlashAttribute("error", ex.getMessage());
-        }
-        return "redirect:/manager/register-user";
-    }
+    private final PlatformTransactionManager transactionManager;
 
     @GetMapping("/all")
     public String showall(Model model) {
@@ -154,13 +128,14 @@ public class CsvController {
 
     private void saveBatches(List<Customer> customers, List<Budget> budgets, List<Expense> expenses) {
         int BATCH_SIZE = 100;
-        customerService.saveBatch(customers, BATCH_SIZE);
+        // efa vita insert
+//        customerService.saveBatch(customers, BATCH_SIZE);
         budgetService.saveBatch(budgets, BATCH_SIZE);
         expenseService.saveBatch(expenses, BATCH_SIZE);
     }
 
 //    @PostMapping("/customer")
-//    public String fichier3(
+//    public String customer(
 //            @RequestParam("file") MultipartFile file,
 //            Authentication authentication,
 //            RedirectAttributes redirectAttributes,
@@ -189,7 +164,7 @@ public class CsvController {
 //    }
 //
 //    @PostMapping("/expense")
-//    public String fichier1(
+//    public String expense(
 //            @RequestParam("file") MultipartFile file,
 //            Authentication authentication,
 //            RedirectAttributes redirectAttributes

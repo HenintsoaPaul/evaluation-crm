@@ -6,8 +6,9 @@ import lombok.Data;
 
 @Data
 public class ExpenseCsvDto {
-    @NotBlank(message = "'email' cannot be blank")
-    @Email(message = "Please enter a valid email format")
+    @NotBlank(message = "'customer_email' cannot be blank")
+    @Email(message = "Please enter a valid email format for 'customer_email'")
+    @Size(max = 255, message = "'customer_email' must be less than 255 characters")
     @CsvBindByName(column = "customer_email")
     private String customer_email;
 
@@ -36,10 +37,9 @@ public class ExpenseCsvDto {
     public void setExpenseStr(String expense) {
         if (expense.contains(",")) {
             this.expense = Double.parseDouble(expense.replace(",", "."));
-            this.expenseStr = expense;
         } else {
             this.expense = Double.parseDouble(expense);
-            this.expenseStr = expense;
         }
+        this.expenseStr = expense;
     }
 }
