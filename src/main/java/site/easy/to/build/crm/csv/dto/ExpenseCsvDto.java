@@ -34,7 +34,6 @@ public class ExpenseCsvDto {
 
     // Custom setter for expense to handle comma replacement
     public void setExpenseStr(String expense) {
-        System.out.println("Expense: " + expense);
         if (expense.contains(",")) {
             this.expense = Double.parseDouble(expense.replace(",", "."));
             this.expenseStr = expense;
