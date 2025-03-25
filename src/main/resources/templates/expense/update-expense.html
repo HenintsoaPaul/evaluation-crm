@@ -128,7 +128,7 @@
                                             <input type="text" id="amount_alerte"
                                                    class="form-control"
                                                    readonly
-                                                   th:value="${(budgetAlertConfig.rate / 100) * budget.amountLimit}">
+                                                   th:value="${(budgetAlertConfig.rate / 100) * budgetTotal.amountTotal}">
                                         </div>
                                     </div>
                                     <!--budget-->
@@ -138,14 +138,14 @@
                                             <input type="text" id="amount_limit"
                                                    class="form-control"
                                                    readonly
-                                                   th:value="${budget.amountLimit}">
+                                                   th:value="${budgetTotal.amountTotal}">
                                         </div>
                                         <label class="m-t-20" for="amount_remain">Amount Remain:</label>
                                         <div class="input-group">
                                             <input type="text" id="amount_remain"
                                                    class="form-control"
                                                    readonly
-                                                   th:value="${budget.amountRemain}">
+                                                   th:value="${budgetTotal.amountRemain}">
                                         </div>
                                     </div>
                                 </div>
@@ -195,8 +195,8 @@
 <script th:inline="javascript">
     const home = /*[[${home}]]*/ null;
     const tauxAlerte = /*[[${budgetAlertConfig.rate}]]*/ null;
-    const amountLimit = /*[[${budget.amountLimit}]]*/ null;
-    const amountRemain = /*[[${budget.amountRemain}]]*/ null;
+    const amountLimit = /*[[${budgetTotal.amountTotal}]]*/ null;
+    const amountRemain = /*[[${budgetTotal.amountRemain}]]*/ null;
     const debutAlerte = amountLimit * (tauxAlerte / 100);
 
     const oldAmountExpense =  /*[[${expense.amount}]]*/ null;
