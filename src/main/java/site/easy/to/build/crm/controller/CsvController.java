@@ -3,12 +3,15 @@ package site.easy.to.build.crm.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import site.easy.to.build.crm.csv.CsvValidationException;
+import site.easy.to.build.crm.csv.dto.CsvErrorWrapper;
 import site.easy.to.build.crm.entity.*;
 import site.easy.to.build.crm.service.BudgetService;
 import site.easy.to.build.crm.service.ExpenseService;
@@ -16,6 +19,8 @@ import site.easy.to.build.crm.service.customer.CustomerServiceImpl;
 import site.easy.to.build.crm.service.user.UserServiceImpl;
 import site.easy.to.build.crm.util.AuthenticationUtils;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Controller
@@ -54,6 +59,72 @@ public class CsvController {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }
         return "redirect:/manager/register-user";
+    }
+
+    @GetMapping("/all")
+    public String showall(Model model) {
+        return "/data-management/csv";
+    }
+
+    @PostMapping("/all")
+    public String all(
+            @RequestParam("fileCustomer") MultipartFile fileCustomer,
+            @RequestParam("fileBudget") MultipartFile fileBudget,
+            @RequestParam("fileExpense") MultipartFile fileExpense,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes,
+            @RequestParam(required = false, defaultValue = "false") boolean sendEmail,
+            Model model
+    ) {
+        try {
+            int userId = authenticationUtils.getLoggedInUserId(authentication);
+            User loggedInUser = userService.findById(userId);
+            if (loggedInUser.isInactiveUser()) {
+                return "error/account-inactive";
+            }
+
+            HashMap<String, List<CsvErrorWrapper>> errorsPerFile = new HashMap<>();
+            List<Customer> customers = new ArrayList<>();
+            List<Budget> budgets = new ArrayList<>();
+            List<Expense> expenses = new ArrayList<>();
+
+            // import csv
+            try {
+                customers = customerService.importCsv(fileCustomer, loggedInUser, authentication, sendEmail);
+            } catch (CsvValidationException e) {
+                errorsPerFile.put("customers", e.getErrors());
+            }
+
+            try {
+                budgets = budgetService.importCsv(fileBudget);
+            } catch (CsvValidationException e) {
+                errorsPerFile.put("budgets", e.getErrors());
+            }
+
+            try {
+                expenses = expenseService.importCsv(fileExpense, loggedInUser);
+            } catch (CsvValidationException e) {
+                errorsPerFile.put("expenses", e.getErrors());
+            }
+
+            if (errorsPerFile.isEmpty()) {
+                redirectAttributes.addFlashAttribute("messageImp", "Mety doly dada 👌");
+                redirectAttributes.addFlashAttribute("customersOk", customers.size());
+                redirectAttributes.addFlashAttribute("budgetsOk", budgets.size());
+                redirectAttributes.addFlashAttribute("expensesOk", expenses.size());
+            } else {
+                model.addAttribute("customersErrors", errorsPerFile.get("customers"));
+                model.addAttribute("budgetsErrors", errorsPerFile.get("budgets"));
+                model.addAttribute("expensesErrors", errorsPerFile.get("expenses"));
+
+                return "data-management/csv-errors";
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorImp", ex.getMessage());
+        }
+        return "redirect:/import/csv/all";
     }
 
     @PostMapping("/customer")
