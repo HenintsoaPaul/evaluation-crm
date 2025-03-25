@@ -218,12 +218,10 @@ public class DataGeneratorService {
         int maxLength = Math.min(column.columnSize(), 255);
         return switch (column.name().toLowerCase()) {
             case "email" -> faker.internet().emailAddress();
-            case "firstname" -> faker.name().firstName();
-            case "first_name" -> faker.name().firstName();
-            case "lastname" -> faker.name().lastName();
-            case "last_name" -> faker.name().lastName();
-            case "username" -> faker.name().username();
-            case "user_name" -> faker.name().username();
+            case "firstname", "first_name" -> faker.name().firstName();
+            case "lastname", "last_name" -> faker.name().lastName();
+            case "username", "user_name" -> faker.name().username();
+            case "name" -> faker.name().name();
             case "phone" -> faker.phoneNumber().phoneNumber();
             case "address" -> faker.address().streetAddress();
             case "city" -> faker.address().city();
