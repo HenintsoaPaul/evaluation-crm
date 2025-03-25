@@ -1,6 +1,7 @@
 package site.easy.to.build.crm.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,6 +14,8 @@ import site.easy.to.build.crm.entity.*;
 import site.easy.to.build.crm.repository.*;
 
 import java.io.IOException;
+import java.sql.PreparedStatement;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,6 +33,7 @@ public class ExpenseService {
     private final CustomerRepository customerRepository;
     private final GenericCsvService<ExpenseCsvDto, Expense> genericCsvService;
     private final BudgetTotalRepository budgetTotalRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     private void decreaseBudgetRemaining(int customerId, double amountExpense) {
         BudgetTotal budgetTotal = budgetTotalRepository.findByCustomerId(customerId)
@@ -175,6 +179,25 @@ public class ExpenseService {
         return expenseRepository.findByTicketId(id);
     }
 
+    // batch
+    @Transactional
+    public void saveBatch(List<Expense> expenses) {
+        String sql = "INSERT INTO expense (creation_date, amount, lead_id, ticket_id) VALUES (?, ?, ?, ?)";
+        Timestamp t = Timestamp.valueOf(LocalDateTime.now());
+
+        jdbcTemplate.batchUpdate(sql, expenses, expenses.size(),
+                (PreparedStatement ps, Expense expense) -> {
+                    ps.setTimestamp(1, t);
+                    ps.setDouble(2, expense.getAmount());
+
+                    Integer leadId = (expense.getLead() != null) ? expense.getLead().getLeadId() : null;
+                    Integer ticketId = (expense.getTicket() != null) ? expense.getTicket().getTicketId() : null;
+
+                    ps.setObject(3, leadId, java.sql.Types.INTEGER);
+                    ps.setObject(4, ticketId, java.sql.Types.INTEGER);
+                });
+    }
+
     // csv
     @Transactional
     public List<Expense> importCsv(MultipartFile file, User user) throws IOException, CsvValidationException {
@@ -185,7 +208,7 @@ public class ExpenseService {
         for (ExpenseCsvDto dto : dtos) {
             entities.add(convertToEntity(dto, user));
         }
-        this.expenseRepository.saveAll(entities);
+
         return entities;
     }
 

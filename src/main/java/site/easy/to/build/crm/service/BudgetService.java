@@ -2,6 +2,7 @@ package site.easy.to.build.crm.service;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -14,6 +15,8 @@ import site.easy.to.build.crm.repository.BudgetTotalRepository;
 import site.easy.to.build.crm.repository.CustomerRepository;
 
 import java.io.IOException;
+import java.sql.PreparedStatement;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +29,7 @@ public class BudgetService {
     private final BudgetTotalRepository budgetTotalRepository;
     private final GenericCsvService<BudgetCsvDto, Budget> genericCsvService;
     private final CustomerRepository customerRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     @Transactional
     public Budget save(@NotNull Budget budget) throws Exception {
@@ -62,6 +66,20 @@ public class BudgetService {
         return budgetRepository.findByCustomerId(customerId);
     }
 
+    // batch
+    @Transactional
+    public void saveBatch(List<Budget> budgets) {
+        String sql = "INSERT INTO budget (creation_date, amount, customer_id) VALUES (?, ?, ?)";
+        Timestamp t = Timestamp.valueOf(LocalDateTime.now());
+
+        jdbcTemplate.batchUpdate(sql, budgets, budgets.size(),
+                (PreparedStatement ps, Budget budget) -> {
+                    ps.setTimestamp(1, t);
+                    ps.setDouble(2, budget.getAmount());
+                    ps.setInt(3, budget.getCustomer().getCustomerId());
+                });
+    }
+
     // csv
     @Transactional
     public List<Budget> importCsv(MultipartFile file) throws IOException, CsvValidationException {
@@ -72,7 +90,7 @@ public class BudgetService {
         for (BudgetCsvDto dto : dtos) {
             entities.add(convertToEntity(dto));
         }
-        this.budgetRepository.saveAll(entities);
+
         return entities;
     }
 
@@ -106,7 +124,6 @@ public class BudgetService {
         // budget
         budget.setAmount(csvDto.getBudget());
         budget.setCustomer(customer);
-        budget.setCreationDate(LocalDateTime.now());
 
         return budget;
     }

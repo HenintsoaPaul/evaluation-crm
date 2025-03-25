@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,11 +15,12 @@ import site.easy.to.build.crm.csv.dto.CustomerCsvDto;
 import site.easy.to.build.crm.entity.*;
 import site.easy.to.build.crm.google.service.gmail.GoogleGmailApiService;
 import site.easy.to.build.crm.repository.CustomerRepository;
-import site.easy.to.build.crm.service.user.UserProfileServiceImpl;
 import site.easy.to.build.crm.util.AuthenticationUtils;
 import site.easy.to.build.crm.util.EmailTokenUtils;
 
 import java.io.IOException;
+import java.sql.PreparedStatement;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +41,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Autowired
     GoogleGmailApiService googleGmailApiService;
     @Autowired
-    UserProfileServiceImpl userProfileService;
+    private JdbcTemplate jdbcTemplate;
 
     private final CustomerRepository customerRepository;
 
@@ -88,6 +90,21 @@ public class CustomerServiceImpl implements CustomerService {
         return customerRepository.countByUserId(userId);
     }
 
+    // batch
+    public void saveBatch(List<Customer> customers) {
+        String sql = "INSERT INTO customer (name, email, country, user_id, profile_id, created_at) VALUES (?, ?, ?, ?, ?, ?)";
+        Timestamp t = Timestamp.valueOf(LocalDateTime.now());
+
+        jdbcTemplate.batchUpdate(sql, customers, customers.size(),
+                (PreparedStatement ps, Customer customer) -> {
+                    ps.setString(1, customer.getName());
+                    ps.setString(2, customer.getEmail());
+                    ps.setString(3, "Madagascar");
+                    ps.setInt(4, customer.getUser().getId());
+                    ps.setInt(5, customer.getCustomerLoginInfo().getId());
+                    ps.setTimestamp(6, t);
+                });
+    }
 
     // csv
     @Transactional
@@ -99,7 +116,7 @@ public class CustomerServiceImpl implements CustomerService {
         for (CustomerCsvDto dto : dtos) {
             entities.add(convertToEntity(dto, user, authentication, sendEmail));
         }
-        this.customerRepository.saveAll(entities);
+
         return entities;
     }
 
