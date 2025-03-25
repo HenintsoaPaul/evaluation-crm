@@ -73,7 +73,7 @@ public class CsvController {
             @RequestParam("fileExpense") MultipartFile fileExpense,
             Authentication authentication,
             RedirectAttributes redirectAttributes,
-            @RequestParam(required = false, defaultValue = "false") boolean sendEmail,
+            @RequestParam(required = false, defaultValue = "false") boolean controlSumExpenseVsSumBudget,
             Model model
     ) {
         try {
@@ -90,33 +90,33 @@ public class CsvController {
 
             // import csv
             try {
-                customers = customerService.importCsv(fileCustomer, loggedInUser, authentication, sendEmail);
+                customers = customerService.importCsv(fileCustomer, loggedInUser);
             } catch (CsvValidationException e) {
                 errorsPerFile.put("customers", e.getErrors());
             }
-
             try {
                 budgets = budgetService.importCsv(fileBudget);
             } catch (CsvValidationException e) {
                 errorsPerFile.put("budgets", e.getErrors());
             }
-
             try {
                 expenses = expenseService.importCsv(fileExpense, loggedInUser);
             } catch (CsvValidationException e) {
                 errorsPerFile.put("expenses", e.getErrors());
             }
 
-            if (errorsPerFile.isEmpty()) {
-                redirectAttributes.addFlashAttribute("messageImp", "Mety doly dada 👌");
-                redirectAttributes.addFlashAttribute("customersOk", customers.size());
-                redirectAttributes.addFlashAttribute("budgetsOk", budgets.size());
-                redirectAttributes.addFlashAttribute("expensesOk", expenses.size());
-            } else {
-                model.addAttribute("customersErrors", errorsPerFile.get("customers"));
-                model.addAttribute("budgetsErrors", errorsPerFile.get("budgets"));
-                model.addAttribute("expensesErrors", errorsPerFile.get("expenses"));
+            // control expense > budget
+            if (controlSumExpenseVsSumBudget) {
+                validateSumExpenseVsSumBudget(expenses, budgets, errorsPerFile);
+            }
 
+            // batch save
+            this.saveBatches(customers, budgets, expenses);
+
+            if (errorsPerFile.isEmpty()) {
+                setSuccessAttributes(redirectAttributes, customers, budgets, expenses);
+            } else {
+                setErrorAttributes(model, errorsPerFile);
                 return "data-management/csv-errors";
             }
 
@@ -127,88 +127,120 @@ public class CsvController {
         return "redirect:/import/csv/all";
     }
 
-    @PostMapping("/customer")
-    public String fichier3(
-            @RequestParam("file") MultipartFile file,
-            Authentication authentication,
-            RedirectAttributes redirectAttributes,
-            @RequestParam(required = false, defaultValue = "false") boolean sendEmail
-    ) {
-        try {
-            int userId = authenticationUtils.getLoggedInUserId(authentication);
-            User loggedInUser = userService.findById(userId);
-            if (loggedInUser.isInactiveUser()) {
-                return "error/account-inactive";
-            }
+    // methods
+    private void validateSumExpenseVsSumBudget(List<Expense> expenses, List<Budget> budgets,
+                                               HashMap<String, List<CsvErrorWrapper>> errorsPerFile) {
+        double sumExpense = expenses.stream().mapToDouble(Expense::getAmount).sum();
+        double sumBudget = budgets.stream().mapToDouble(Budget::getAmount).sum();
 
-            // import csv
-            List<Customer> customers = customerService.importCsv(file, loggedInUser, authentication, sendEmail);
-
-            String msg = "Fichier CSV traité avec succès : " + customers.size() + " lignes insérées";
-            redirectAttributes.addFlashAttribute("message", msg);
-        } catch (CsvValidationException e) {
-            e.printStackTrace();
-            redirectAttributes.addFlashAttribute("errorImp", e.getErrors());
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            redirectAttributes.addFlashAttribute("errorImp", ex.getMessage());
+        if (sumExpense > sumBudget) {
+            CsvErrorWrapper cew = new CsvErrorWrapper("budget+expense", 0, "sumExpense > sumBudget", null);
+            errorsPerFile.put("sumExpense > sumBudget", List.of(cew));
         }
-        return "redirect:/data/management/izy";
     }
 
-    @PostMapping("/expense")
-    public String fichier1(
-            @RequestParam("file") MultipartFile file,
-            Authentication authentication,
-            RedirectAttributes redirectAttributes
-    ) {
-        try {
-            int userId = authenticationUtils.getLoggedInUserId(authentication);
-            User loggedInUser = userService.findById(userId);
-            if (loggedInUser.isInactiveUser()) {
-                return "error/account-inactive";
-            }
-
-            // import csv
-            List<Expense> expenses = expenseService.importCsv(file, loggedInUser);
-
-            String msg = "Fichier CSV traité avec succès : " + expenses.size() + " lignes insérées";
-            redirectAttributes.addFlashAttribute("messageImp", msg);
-        } catch (CsvValidationException e) {
-            e.printStackTrace();
-            redirectAttributes.addFlashAttribute("errorImp", e.getErrors());
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            redirectAttributes.addFlashAttribute("errorImp", ex.getMessage());
-        }
-        return "redirect:/data/management/izy";
+    private void setSuccessAttributes(RedirectAttributes redirectAttributes, List<Customer> customers, List<Budget> budgets, List<Expense> expenses) {
+        redirectAttributes.addFlashAttribute("messageImp", "Mety doly dada 👌");
+        redirectAttributes.addFlashAttribute("customersOk", customers.size());
+        redirectAttributes.addFlashAttribute("budgetsOk", budgets.size());
+        redirectAttributes.addFlashAttribute("expensesOk", expenses.size());
     }
 
-    @PostMapping("/budget")
-    public String budget(
-            @RequestParam("file") MultipartFile file,
-            Authentication authentication,
-            RedirectAttributes redirectAttributes
-    ) {
-        try {
-            int userId = authenticationUtils.getLoggedInUserId(authentication);
-            User loggedInUser = userService.findById(userId);
-            if (loggedInUser.isInactiveUser()) {
-                return "error/account-inactive";
-            }
-
-            // import csv
-            List<Budget> expenses = budgetService.importCsv(file);
-
-            String msg = "Fichier CSV traité avec succès : " + expenses.size() + " lignes insérées";
-            redirectAttributes.addFlashAttribute("messageImp", msg);
-        } catch (CsvValidationException e) {
-            e.printStackTrace();
-            redirectAttributes.addFlashAttribute("errorImp", e.getErrors());
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            redirectAttributes.addFlashAttribute("errorImp", ex.getMessage());
-        }
-        return "redirect:/data/management/izy";
+    private void setErrorAttributes(Model model, HashMap<String, List<CsvErrorWrapper>> errorsPerFile) {
+        model.addAttribute("customersErrors", errorsPerFile.get("customers"));
+        model.addAttribute("budgetsErrors", errorsPerFile.get("budgets"));
+        model.addAttribute("expensesErrors", errorsPerFile.get("expenses"));
     }
+
+    private void saveBatches(List<Customer> customers, List<Budget> budgets, List<Expense> expenses) {
+        int BATCH_SIZE = 100;
+        customerService.saveBatch(customers, BATCH_SIZE);
+        budgetService.saveBatch(budgets, BATCH_SIZE);
+        expenseService.saveBatch(expenses, BATCH_SIZE);
+    }
+
+//    @PostMapping("/customer")
+//    public String fichier3(
+//            @RequestParam("file") MultipartFile file,
+//            Authentication authentication,
+//            RedirectAttributes redirectAttributes,
+//            @RequestParam(required = false, defaultValue = "false") boolean sendEmail
+//    ) {
+//        try {
+//            int userId = authenticationUtils.getLoggedInUserId(authentication);
+//            User loggedInUser = userService.findById(userId);
+//            if (loggedInUser.isInactiveUser()) {
+//                return "error/account-inactive";
+//            }
+//
+//            // import csv
+//            List<Customer> customers = customerService.importCsv(file, loggedInUser, authentication, sendEmail);
+//
+//            String msg = "Fichier CSV traité avec succès : " + customers.size() + " lignes insérées";
+//            redirectAttributes.addFlashAttribute("message", msg);
+//        } catch (CsvValidationException e) {
+//            e.printStackTrace();
+//            redirectAttributes.addFlashAttribute("errorImp", e.getErrors());
+//        } catch (Exception ex) {
+//            ex.printStackTrace();
+//            redirectAttributes.addFlashAttribute("errorImp", ex.getMessage());
+//        }
+//        return "redirect:/data/management/izy";
+//    }
+//
+//    @PostMapping("/expense")
+//    public String fichier1(
+//            @RequestParam("file") MultipartFile file,
+//            Authentication authentication,
+//            RedirectAttributes redirectAttributes
+//    ) {
+//        try {
+//            int userId = authenticationUtils.getLoggedInUserId(authentication);
+//            User loggedInUser = userService.findById(userId);
+//            if (loggedInUser.isInactiveUser()) {
+//                return "error/account-inactive";
+//            }
+//
+//            // import csv
+//            List<Expense> expenses = expenseService.importCsv(file, loggedInUser);
+//
+//            String msg = "Fichier CSV traité avec succès : " + expenses.size() + " lignes insérées";
+//            redirectAttributes.addFlashAttribute("messageImp", msg);
+//        } catch (CsvValidationException e) {
+//            e.printStackTrace();
+//            redirectAttributes.addFlashAttribute("errorImp", e.getErrors());
+//        } catch (Exception ex) {
+//            ex.printStackTrace();
+//            redirectAttributes.addFlashAttribute("errorImp", ex.getMessage());
+//        }
+//        return "redirect:/data/management/izy";
+//    }
+//
+//    @PostMapping("/budget")
+//    public String budget(
+//            @RequestParam("file") MultipartFile file,
+//            Authentication authentication,
+//            RedirectAttributes redirectAttributes
+//    ) {
+//        try {
+//            int userId = authenticationUtils.getLoggedInUserId(authentication);
+//            User loggedInUser = userService.findById(userId);
+//            if (loggedInUser.isInactiveUser()) {
+//                return "error/account-inactive";
+//            }
+//
+//            // import csv
+//            List<Budget> expenses = budgetService.importCsv(file);
+//
+//            String msg = "Fichier CSV traité avec succès : " + expenses.size() + " lignes insérées";
+//            redirectAttributes.addFlashAttribute("messageImp", msg);
+//        } catch (CsvValidationException e) {
+//            e.printStackTrace();
+//            redirectAttributes.addFlashAttribute("errorImp", e.getErrors());
+//        } catch (Exception ex) {
+//            ex.printStackTrace();
+//            redirectAttributes.addFlashAttribute("errorImp", ex.getMessage());
+//        }
+//        return "redirect:/data/management/izy";
+//    }
 }
