@@ -89,10 +89,10 @@ public class CsvController {
                 System.out.println("Len expenses err : " + e.getErrors().size());
             }
 
-            // control expense > budget
-            if (controlSumExpenseVsSumBudget) {
-                validateSumExpenseVsSumBudget(expenses, budgets, errorsPerFile);
-            }
+//            // control expense > budget
+//            if (controlSumExpenseVsSumBudget) {
+//                validateSumExpenseVsSumBudget(expenses, budgets, errorsPerFile);
+//            }
 
             if (errorsPerFile.isEmpty()) {
                 this.saveBatches(customers, budgets, expenses);

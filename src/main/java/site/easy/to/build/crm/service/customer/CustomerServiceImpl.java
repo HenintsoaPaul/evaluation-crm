@@ -5,12 +5,12 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import site.easy.to.build.crm.csv.CsvValidationException;
 import site.easy.to.build.crm.csv.GenericCsvService;
+import site.easy.to.build.crm.csv.dto.CsvErrorWrapper;
 import site.easy.to.build.crm.csv.dto.CustomerCsvDto;
 import site.easy.to.build.crm.entity.*;
 import site.easy.to.build.crm.google.service.gmail.GoogleGmailApiService;
@@ -24,8 +24,6 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.springframework.security.core.Authentication;
 
 @Service
 public class CustomerServiceImpl implements CustomerService {
@@ -114,10 +112,23 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     public List<Customer> importCsv(MultipartFile file, User user) throws IOException, CsvValidationException {
         List<Customer> entities = new ArrayList<>();
-        List<CustomerCsvDto> dtos = genericCsvService.getDtosFromCsv(file, CustomerCsvDto.class, file.getOriginalFilename());
+        List<CustomerCsvDto> dtos = new ArrayList<>();
+        List<CsvErrorWrapper> errors = new ArrayList<>();
 
-        for (CustomerCsvDto dto : dtos) {
-            entities.add(convertToEntity(dto, user));
+        String fileName = file.getOriginalFilename();
+        try {
+            dtos = genericCsvService.getDtosFromCsv(file, CustomerCsvDto.class, fileName);
+        } catch (CsvValidationException e) {
+            errors.addAll(e.getErrors());
+        }
+
+        for (int i = 0; i < dtos.size(); i++) {
+            CustomerCsvDto dto = dtos.get(i);
+            entities.add(convertToEntity(dto, user, errors, i + 1, fileName));
+        }
+
+        if (!errors.isEmpty()) {
+            throw new CsvValidationException("dto->customer", errors);
         }
 
         return entities;
@@ -126,8 +137,17 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     public Customer convertToEntity(
             CustomerCsvDto csvDto,
-            User user
+            User user,
+            List<CsvErrorWrapper> errors,
+            int rowIndex,
+            String fileName
     ) {
+        Customer existing = customerRepository.findByEmail(csvDto.getCustomer_email());
+        if (existing != null) {
+            String msg = "Duplicate email '" + existing.getEmail() + "'!";
+            errors.add(new CsvErrorWrapper(fileName, rowIndex, msg, csvDto.toString()));
+        }
+
         Customer customer = new Customer();
         customer.setEmail(csvDto.getCustomer_email());
         customer.setName(csvDto.getCustomer_name());

@@ -239,9 +239,7 @@ public class ExpenseService {
         Expense expense = new Expense();
         expense.setAmount(csvDto.getExpense());
 
-        double amountExpense = csvDto.getExpense();
         String email = csvDto.getCustomer_email();
-
         Customer customer = customerRepository.findByEmail(email);
         if (customer == null) {
             String msg = "Customer '" + email + "' not found!";
@@ -250,7 +248,7 @@ public class ExpenseService {
         }
 
         try {
-            decreaseBudget(customer.getCustomerId(), amountExpense, email);
+            decreaseBudget(customer.getCustomerId(), csvDto.getExpense(), email);
         } catch (CsvValidationException ve) {
             errors.add(new CsvErrorWrapper(filename, rowIndex, ve.getMessage(), csvDto.toString()));
             return null;
