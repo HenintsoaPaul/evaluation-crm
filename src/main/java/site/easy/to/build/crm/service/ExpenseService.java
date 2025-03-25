@@ -23,23 +23,43 @@ import java.util.List;
 public class ExpenseService {
 
     private final ExpenseRepository expenseRepository;
-    private final BudgetRepository budgetRepository;
     private final DataDeleteService dataDeleteService;
     private final HistoExpenseService histoExpenseService;
     private final LeadRepository leadRepository;
     private final TicketRepository ticketRepository;
     private final CustomerRepository customerRepository;
     private final GenericCsvService<ExpenseCsvDto, Expense> genericCsvService;
+    private final BudgetTotalRepository budgetTotalRepository;
 
-    private void decreaseBudgetRemaining(Budget budget, double amountExpense) {
-        double remain = budget.getAmountRemain() - amountExpense;
-        budget.setAmountRemain(remain);
-        budgetRepository.save(budget);
+    private void decreaseBudgetRemaining(int customerId, double amountExpense) {
+        BudgetTotal budgetTotal = budgetTotalRepository.findByCustomerId(customerId)
+                .orElseThrow(() -> new RuntimeException("Budget total not found"));
+
+        double remain = budgetTotal.getAmountRemain() - amountExpense;
+        budgetTotal.setAmountRemain(remain);
+
+        budgetTotalRepository.save(budgetTotal);
+    }
+
+    public List<String> getExpenseLog(BudgetAlertConfig bac, BudgetTotal budgetTotal, int expenseId) {
+        double newBudgetRemain = budgetTotal.getAmountRemain(),
+                budgetAmountTotal = budgetTotal.getAmountTotal(),
+                alerte = budgetAmountTotal * (bac.getRate() / 100);
+
+        List<String> messages = new ArrayList<>();
+        messages.add("Modification du budget total '" + budgetTotal.getId() + "' par la mise a jour de l'expense '" + expenseId + "'");
+        if (alerte <= newBudgetRemain) {
+            messages.add("Seuil d'alerte de depense atteint pour le budget! seuil: " + alerte + " | reste: " + newBudgetRemain);
+        }
+        if (newBudgetRemain < 0) {
+            messages.add("Depassement de budget! reste: " + newBudgetRemain);
+        }
+        return messages;
     }
 
     @Transactional
-    public Expense save(Ticket ticket, Budget budget, double amountExpense) throws Exception {
-        decreaseBudgetRemaining(budget, amountExpense);
+    public Expense save(Ticket ticket, double amountExpense) throws Exception {
+        decreaseBudgetRemaining(ticket.getCustomer().getCustomerId(), amountExpense);
 
         Expense expense = new Expense();
         expense.setTicket(ticket);
@@ -50,8 +70,8 @@ public class ExpenseService {
     }
 
     @Transactional
-    public Expense save(Lead lead, Budget budget, double amountExpense) throws Exception {
-        decreaseBudgetRemaining(budget, amountExpense);
+    public Expense save(Lead lead, double amountExpense) throws Exception {
+        decreaseBudgetRemaining(lead.getCustomer().getCustomerId(), amountExpense);
 
         Expense expense = new Expense();
         expense.setLead(lead);
@@ -102,25 +122,29 @@ public class ExpenseService {
     public HashMap<String, Object> updateById(int expenseId, double newAmount) throws ApiServerException {
         Expense expense = this.findById(expenseId);
 
-        Budget budget;
+        int customerId;
         if (expense.getLead() == null) {
-            budget = expense.getTicket().getBudget();
+            customerId = expense.getTicket().getCustomer().getCustomerId();
         } else {
-            budget = expense.getLead().getBudget();
+            customerId = expense.getLead().getCustomer().getCustomerId();
         }
+        BudgetTotal budgetTotal = budgetTotalRepository.findByCustomerId(customerId)
+                .orElseThrow(() -> new ApiServerException("Budget total not found"));
 
-        double oldAmount = expense.getAmount(),
-                oldBudgetRemain = budget.getAmountRemain(),
-                newBudgetRemain = oldBudgetRemain + oldAmount - newAmount;
+        double oldExpenseAmount = expense.getAmount(),
+                oldBudgetRemain = budgetTotal.getAmountRemain(),
+                newBudgetRemain = oldBudgetRemain + oldExpenseAmount - newAmount;
 
         expense.setAmount(newAmount);
-        budget.setAmountRemain(newBudgetRemain);
+        expenseRepository.save(expense);
+
+        budgetTotal.setAmountRemain(newBudgetRemain);
+        budgetTotalRepository.save(budgetTotal);
+
 
         HashMap<String, Object> map = new HashMap<>();
         map.put("expense", expense);
-        map.put("budget", budget);
-
-        budgetRepository.save(budget);
+        map.put("budgetTotal", budgetTotal);
         this.update(expense);
 
         return map;
