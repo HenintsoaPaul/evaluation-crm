@@ -80,25 +80,19 @@
                                     <thead>
                                     <tr>
                                         <th>#</th>
-                                        <th>Name</th>
                                         <th>Customer</th>
-                                        <th>Amount Limit</th>
-                                        <th>Amount Remain</th>
-<!--                                        <th>Show</th>-->
-                                        <th>Edit</th>
+                                        <th>Amount</th>
+                                        <th>Creation date</th>
                                     </tr>
                                     </thead>
                                     <tbody>
                                     <tr th:if="${budgets != null}" th:each="budget : ${budgets}">
                                         <td th:text="${budget.id}"></td>
-                                        <td th:text="${budget.getName()}"></td>
                                         <td th:text="${budget.getCustomer().getName()}"></td>
-                                        <td th:text="${budget.getAmountLimit()}"></td>
-                                        <td th:text="${budget.getAmountRemain()}"></td>
+                                        <td th:text="${budget.getAmount()}"></td>
+                                        <td th:text="${budget.getCreationDate()}"></td>
 <!--                                        <td><a th:href="${home + 'budget/show-budget/' + budget.id}"><i-->
 <!--                                                class="fas fa-eye"></i></a></td>-->
-                                        <td><a th:href="${home + 'budget/update-budget/' + budget.id}"><i
-                                                class="fas fa-edit"></i></a></td>
                                     </tr>
                                     </tbody>
                                 </table>
