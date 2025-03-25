@@ -3,12 +3,18 @@ package site.easy.to.build.crm.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import site.easy.to.build.crm.csv.CsvValidationException;
+import site.easy.to.build.crm.csv.GenericCsvService;
+import site.easy.to.build.crm.csv.dto.ExpenseCsvDto;
 import site.easy.to.build.crm.entity.HistoExpense;
 import site.easy.to.build.crm.api.ApiServerException;
 import site.easy.to.build.crm.entity.*;
 import site.easy.to.build.crm.repository.*;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -23,6 +29,7 @@ public class ExpenseService {
     private final LeadRepository leadRepository;
     private final TicketRepository ticketRepository;
     private final CustomerRepository customerRepository;
+    private final GenericCsvService<ExpenseCsvDto, Expense> genericCsvService;
 
     private void decreaseBudgetRemaining(Budget budget, double amountExpense) {
         double remain = budget.getAmountRemain() - amountExpense;
@@ -142,5 +149,68 @@ public class ExpenseService {
 
     public Expense findByTicketId(int id) {
         return expenseRepository.findByTicketId(id);
+    }
+
+    // csv
+    @Transactional
+    public List<Expense> importCsv(MultipartFile file, User user) throws IOException, CsvValidationException {
+        List<Expense> entities = new ArrayList<>();
+        for (ExpenseCsvDto dto : genericCsvService.getDtosFromCsv(file, ExpenseCsvDto.class)) {
+            entities.add(convertToEntity(dto, user));
+        }
+        this.expenseRepository.saveAll(entities);
+        return entities;
+    }
+
+    @Transactional
+    public Expense convertToEntity(
+            ExpenseCsvDto csvDto,
+            User user
+    ) throws CsvValidationException {
+        Expense expense = new Expense();
+
+        Customer customer = customerRepository.findByEmail(csvDto.getCustomer_email());
+        if (customer == null) {
+            throw new CsvValidationException("Customer '" + csvDto.getCustomer_email() + "' not found!", null);
+        }
+
+        if (csvDto.getType().equals("ticket")) {
+            Ticket ticket = new Ticket();
+            ticket.setCustomer(customer);
+            ticket.setManager(user);
+            ticket.setEmployee(null);
+            ticket.setSubject(csvDto.getSubject_or_name());
+            ticket.setStatus(csvDto.getStatus());
+            ticket.setPriority(getTicketPriority());
+
+            expense.setTicket(ticket);
+            ticketRepository.save(ticket);
+
+        } else if (csvDto.getType().equals("lead")) {
+            Lead lead = new Lead();
+            lead.setCustomer(customer);
+            lead.setManager(user);
+            lead.setEmployee(null);
+            lead.setName(csvDto.getSubject_or_name());
+            lead.setStatus(csvDto.getStatus());
+
+            expense.setLead(lead);
+            leadRepository.save(lead);
+
+        } else {
+            throw new CsvValidationException("Unknown expense type", null);
+        }
+
+        // expense
+        expense.setAmount(csvDto.getExpense());
+        expense.setCreationDate(LocalDateTime.now());
+
+        return expense;
+    }
+
+    private final String[] ticketPriorityArray = List.of("low", "medium", "high", "closed", "urgent", "critical").toArray(new String[0]);
+
+    private String getTicketPriority() {
+        return ticketPriorityArray[0];
     }
 }

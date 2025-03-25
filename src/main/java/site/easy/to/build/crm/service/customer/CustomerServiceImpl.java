@@ -6,6 +6,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import site.easy.to.build.crm.csv.CsvValidationException;
 import site.easy.to.build.crm.csv.GenericCsvService;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.springframework.security.core.Authentication;
 
 @Service
@@ -88,6 +90,7 @@ public class CustomerServiceImpl implements CustomerService {
 
 
     // csv
+    @Transactional
     public List<Customer> importCsv(MultipartFile file, User user, Authentication authentication, boolean sendEmail) throws IOException, CsvValidationException {
         List<Customer> entities = new ArrayList<>();
         for (CustomerCsvDto dto : genericCsvService.getDtosFromCsv(file, CustomerCsvDto.class)) {
@@ -97,7 +100,7 @@ public class CustomerServiceImpl implements CustomerService {
         return entities;
     }
 
-
+    @Transactional
     public Customer convertToEntity(
             CustomerCsvDto csvDto,
             User user,

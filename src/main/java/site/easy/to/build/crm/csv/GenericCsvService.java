@@ -50,8 +50,8 @@ public class GenericCsvService<T, E> {
             CsvToBean<T> csvToBean = new CsvToBeanBuilder<T>(br)
                     .withType(clazz)
                     .withIgnoreLeadingWhiteSpace(true)
+                    .withQuoteChar('"') // regrouper les valeurs entre "..." [plusieurs valeurs, sur plusieurs ligne, double "..." pour echapper des "..."]
 //                    .withSeparator(';')
-//                    .withQuoteChar('"') // regrouper les valeurs entre "..." [plusieurs valeurs, sur plusieurs ligne, double "..." pour echapper des "..."]
 //                    .withThrowExceptions(false) // pour éviter une erreur fatale en cas de colonne maquant
                     .build();
 
