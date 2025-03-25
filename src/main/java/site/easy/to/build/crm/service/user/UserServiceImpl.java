@@ -81,7 +81,9 @@ public class UserServiceImpl implements UserService {
     // csv
     public List<User> importCsv(MultipartFile file, OAuthUser oAuthUser) throws IOException, CsvValidationException {
         List<User> entities = new ArrayList<>();
-        for (UserCsvDto dto : genericCsvService.getDtosFromCsv(file, UserCsvDto.class)) {
+        String filename = file.getOriginalFilename();
+
+        for (UserCsvDto dto : genericCsvService.getDtosFromCsv(file, UserCsvDto.class, filename)) {
             entities.add(convertToEntity(dto, oAuthUser));
         }
         return entities;

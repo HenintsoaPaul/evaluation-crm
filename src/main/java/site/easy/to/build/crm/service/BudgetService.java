@@ -66,7 +66,9 @@ public class BudgetService {
     @Transactional
     public List<Budget> importCsv(MultipartFile file) throws IOException, CsvValidationException {
         List<Budget> entities = new ArrayList<>();
-        for (BudgetCsvDto dto : genericCsvService.getDtosFromCsv(file, BudgetCsvDto.class)) {
+        String filename = file.getOriginalFilename();
+
+        for (BudgetCsvDto dto : genericCsvService.getDtosFromCsv(file, BudgetCsvDto.class, filename)) {
             entities.add(convertToEntity(dto));
         }
         this.budgetRepository.saveAll(entities);

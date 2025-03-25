@@ -93,7 +93,9 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     public List<Customer> importCsv(MultipartFile file, User user, Authentication authentication, boolean sendEmail) throws IOException, CsvValidationException {
         List<Customer> entities = new ArrayList<>();
-        for (CustomerCsvDto dto : genericCsvService.getDtosFromCsv(file, CustomerCsvDto.class)) {
+        String filename = file.getOriginalFilename();
+
+        for (CustomerCsvDto dto : genericCsvService.getDtosFromCsv(file, CustomerCsvDto.class, filename)) {
             entities.add(convertToEntity(dto, user, authentication, sendEmail));
         }
         this.customerRepository.saveAll(entities);
