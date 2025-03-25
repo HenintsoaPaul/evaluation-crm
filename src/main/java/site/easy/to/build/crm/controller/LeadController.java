@@ -181,7 +181,6 @@ public class LeadController {
                              @RequestParam("customerId") int customerId, @RequestParam("employeeId") int employeeId,
                              Authentication authentication, @RequestParam("allFiles")@Nullable String files,
                              @RequestParam("folderId") @Nullable String folderId, Model model,
-                             @RequestParam("budgetId") String budgetId,
                              @RequestParam("amountExpense") double amountExpense) throws Exception {
 
         int userId = authenticationUtils.getLoggedInUserId(authentication);
@@ -222,14 +221,10 @@ public class LeadController {
             }
         }
 
-        String trueBudgetId = budgetId.split("--", 3)[0];
-        Budget budget = budgetService.findById(Integer.parseInt(trueBudgetId));
-        lead.setBudget(budget);
-
         Lead createdLead = leadService.save(lead);
         fileUtil.saveFiles(allFiles, createdLead);
 
-        expenseService.save(lead, budget, amountExpense);
+        expenseService.save(lead, amountExpense);
 
         if (lead.getGoogleDrive() != null) {
             fileUtil.saveGoogleDriveFiles(authentication, allFiles, folderId, createdLead);

@@ -137,8 +137,7 @@ public class TicketController {
     public String createTicket(@ModelAttribute("ticket") @Validated Ticket ticket, BindingResult bindingResult, @RequestParam("customerId") int customerId,
                                @RequestParam Map<String, String> formParams, Model model,
                                @RequestParam("employeeId") int employeeId, Authentication authentication,
-                               @RequestParam("amountExpense") double amountExpense,
-                               @RequestParam("budgetId") String budgetId) throws Exception {
+                               @RequestParam("amountExpense") double amountExpense) throws Exception {
 
         int userId = authenticationUtils.getLoggedInUserId(authentication);
         User manager = userService.findById(userId);
@@ -183,12 +182,8 @@ public class TicketController {
         ticket.setEmployee(employee);
         ticket.setCreatedAt(LocalDateTime.now());
 
-        String trueBudgetId = budgetId.split("--", 3)[0];
-        Budget budget = budgetService.findById(Integer.parseInt(trueBudgetId));
-        ticket.setBudget(budget);
-
         ticketService.save(ticket);
-        expenseService.save(ticket, budget, amountExpense);
+        expenseService.save(ticket, amountExpense);
 
         return "redirect:/employee/ticket/assigned-tickets";
     }
