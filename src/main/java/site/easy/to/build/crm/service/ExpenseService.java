@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import site.easy.to.build.crm.csv.CsvValidationException;
 import site.easy.to.build.crm.csv.GenericCsvService;
+import site.easy.to.build.crm.csv.dto.CsvErrorWrapper;
 import site.easy.to.build.crm.csv.dto.ExpenseCsvDto;
 import site.easy.to.build.crm.entity.HistoExpense;
 import site.easy.to.build.crm.api.ApiServerException;
@@ -34,6 +35,7 @@ public class ExpenseService {
     private final GenericCsvService<ExpenseCsvDto, Expense> genericCsvService;
     private final BudgetTotalRepository budgetTotalRepository;
     private final JdbcTemplate jdbcTemplate;
+    private final BudgetService budgetService;
 
     private void decreaseBudgetRemaining(int customerId, double amountExpense) {
         BudgetTotal budgetTotal = budgetTotalRepository.findByCustomerId(customerId)
@@ -205,10 +207,22 @@ public class ExpenseService {
     @Transactional
     public List<Expense> importCsv(MultipartFile file, User user) throws IOException, CsvValidationException {
         List<Expense> entities = new ArrayList<>();
-        List<ExpenseCsvDto> dtos = genericCsvService.getDtosFromCsv(file, ExpenseCsvDto.class, file.getOriginalFilename());
+        List<ExpenseCsvDto> dtos = new ArrayList<>();
+        List<CsvErrorWrapper> errors = new ArrayList<>();
 
-        for (ExpenseCsvDto dto : dtos) {
-            entities.add(convertToEntity(dto, user));
+        String filename = file.getOriginalFilename();
+        try {
+            dtos = genericCsvService.getDtosFromCsv(file, ExpenseCsvDto.class, filename);
+        } catch (CsvValidationException e) {
+            errors.addAll(e.getErrors());
+        }
+
+        for (int i = 0; i < dtos.size(); i++) {
+            entities.add(convertToEntity(dtos.get(i), user, errors, i + 1, filename));
+        }
+
+        if (!errors.isEmpty()) {
+            throw new CsvValidationException("csv->entity", errors);
         }
 
         return entities;
@@ -217,13 +231,29 @@ public class ExpenseService {
     @Transactional
     public Expense convertToEntity(
             ExpenseCsvDto csvDto,
-            User user
-    ) throws CsvValidationException {
+            User user,
+            List<CsvErrorWrapper> errors,
+            int rowIndex,
+            String filename
+    ) {
         Expense expense = new Expense();
+        expense.setAmount(csvDto.getExpense());
 
-        Customer customer = customerRepository.findByEmail(csvDto.getCustomer_email());
+        double amountExpense = csvDto.getExpense();
+        String email = csvDto.getCustomer_email();
+
+        Customer customer = customerRepository.findByEmail(email);
         if (customer == null) {
-            throw new CsvValidationException("Customer '" + csvDto.getCustomer_email() + "' not found!", null);
+            String msg = "Customer '" + email + "' not found!";
+            errors.add(new CsvErrorWrapper(filename, rowIndex, msg, csvDto.toString()));
+            return null;
+        }
+
+        try {
+            decreaseBudget(customer.getCustomerId(), amountExpense, email);
+        } catch (CsvValidationException ve) {
+            errors.add(new CsvErrorWrapper(filename, rowIndex, ve.getMessage(), csvDto.toString()));
+            return null;
         }
 
         if (csvDto.getType().equals("ticket")) {
@@ -250,19 +280,26 @@ public class ExpenseService {
             leadRepository.save(lead);
 
         } else {
-            throw new CsvValidationException("Unknown expense type", null);
+            String msg = "Unknown expense type : '" + csvDto.getType() + "'! Please refer to existing type";
+            errors.add(new CsvErrorWrapper(filename, rowIndex, msg, csvDto.toString()));
         }
-
-        // expense
-        expense.setAmount(csvDto.getExpense());
-        expense.setCreationDate(LocalDateTime.now());
 
         return expense;
     }
 
-//    private final String[] ticketPriorityArray = List.of("low", "medium", "high", "closed", "urgent", "critical").toArray(new String[0]);
-//
-//    private String getTicketPriority() {
-//        return ticketPriorityArray[0];
-//    }
+    private void decreaseBudget(int customerId, double amountExpense, String email) throws CsvValidationException {
+        BudgetTotal budgetTotal = budgetTotalRepository.findByCustomerId(customerId).orElse(null);
+        if (budgetTotal == null) {
+            throw new CsvValidationException("No budget found for customer '" + email + "'!", null);
+        }
+
+        double amountRemain = budgetTotal.getAmountRemain();
+        if (amountRemain < amountExpense) {
+            String msg = "Budget of customer '" + customerId + "' exceeded expense amount! Remain: " + amountRemain + " | expense: " + amountExpense;
+            throw new CsvValidationException(msg, null);
+        }
+
+        budgetTotal.setAmountRemain(amountRemain - amountExpense);
+        budgetTotalRepository.save(budgetTotal);
+    }
 }

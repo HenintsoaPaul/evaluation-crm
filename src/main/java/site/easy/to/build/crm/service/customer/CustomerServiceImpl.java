@@ -132,6 +132,7 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setEmail(csvDto.getCustomer_email());
         customer.setName(csvDto.getCustomer_name());
         customer.setUser(user);
+        customer.setCountry("Madagascar");
 
         CustomerLoginInfo customerLoginInfo = new CustomerLoginInfo();
         customerLoginInfo.setEmail(csvDto.getCustomer_email());

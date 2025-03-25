@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import site.easy.to.build.crm.csv.CsvValidationException;
 import site.easy.to.build.crm.csv.GenericCsvService;
 import site.easy.to.build.crm.csv.dto.BudgetCsvDto;
+import site.easy.to.build.crm.csv.dto.CsvErrorWrapper;
 import site.easy.to.build.crm.entity.*;
 import site.easy.to.build.crm.repository.BudgetRepository;
 import site.easy.to.build.crm.repository.BudgetTotalRepository;
@@ -87,11 +88,22 @@ public class BudgetService {
     @Transactional
     public List<Budget> importCsv(MultipartFile file) throws IOException, CsvValidationException {
         List<Budget> entities = new ArrayList<>();
-        String filename = file.getOriginalFilename();
-        List<BudgetCsvDto> dtos = genericCsvService.getDtosFromCsv(file, BudgetCsvDto.class, filename);
+        List<BudgetCsvDto> dtos = new ArrayList<>();
+        List<CsvErrorWrapper> errors = new ArrayList<>();
 
-        for (BudgetCsvDto dto : dtos) {
-            entities.add(convertToEntity(dto));
+        String filename = file.getOriginalFilename();
+        try {
+            dtos = genericCsvService.getDtosFromCsv(file, BudgetCsvDto.class, filename);
+        } catch (CsvValidationException e) {
+            errors.addAll(e.getErrors());
+        }
+
+        for (int i = 0; i < dtos.size(); i++) {
+            entities.add(convertToEntity(dtos.get(i), errors, i + 1, filename));
+        }
+
+        if (!errors.isEmpty()) {
+            throw new CsvValidationException("csv conversion error", errors);
         }
 
         return entities;
@@ -99,15 +111,23 @@ public class BudgetService {
 
     @Transactional
     public Budget convertToEntity(
-            BudgetCsvDto csvDto)
-            throws CsvValidationException {
+            BudgetCsvDto csvDto,
+            List<CsvErrorWrapper> errors,
+            int rowIndex,
+            String filename
+    ) {
         Budget budget = new Budget();
+        budget.setAmount(csvDto.getBudget());
+
         double amount = csvDto.getBudget();
 
         Customer customer = customerRepository.findByEmail(csvDto.getCustomer_email());
         if (customer == null) {
-            throw new CsvValidationException("Customer '" + csvDto.getCustomer_email() + "' not found!", null);
+            String msg = "Customer '" + csvDto.getCustomer_email() + "' not found!";
+            errors.add(new CsvErrorWrapper(filename, rowIndex, msg, csvDto.toString()));
+            return null;
         }
+        budget.setCustomer(customer);
 
         BudgetTotal bt = budgetTotalRepository.findByCustomerId(customer.getCustomerId()).orElse(null);
         if (bt == null) {
@@ -121,12 +141,7 @@ public class BudgetService {
             bt.setAmountTotal(oldTotal + amount);
             bt.setAmountRemain(oldRemain + amount);
         }
-
         budgetTotalRepository.save(bt);
-
-        // budget
-        budget.setAmount(csvDto.getBudget());
-        budget.setCustomer(customer);
 
         return budget;
     }
