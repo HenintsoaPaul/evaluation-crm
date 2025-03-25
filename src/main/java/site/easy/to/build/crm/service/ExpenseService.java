@@ -135,4 +135,12 @@ public class ExpenseService {
     public List<Customer> findAllCustomers() {
         return customerRepository.findAll();
     }
+
+    public Expense findByLeadId(int id) {
+        return expenseRepository.findByLeadId(id);
+    }
+
+    public Expense findByTicketId(int id) {
+        return expenseRepository.findByTicketId(id);
+    }
 }
