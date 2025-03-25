@@ -94,8 +94,9 @@ public class CustomerServiceImpl implements CustomerService {
     public List<Customer> importCsv(MultipartFile file, User user, Authentication authentication, boolean sendEmail) throws IOException, CsvValidationException {
         List<Customer> entities = new ArrayList<>();
         String filename = file.getOriginalFilename();
+        List<CustomerCsvDto> dtos = genericCsvService.getDtosFromCsv(file, CustomerCsvDto.class, filename);
 
-        for (CustomerCsvDto dto : genericCsvService.getDtosFromCsv(file, CustomerCsvDto.class, filename)) {
+        for (CustomerCsvDto dto : dtos) {
             entities.add(convertToEntity(dto, user, authentication, sendEmail));
         }
         this.customerRepository.saveAll(entities);
@@ -116,10 +117,9 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setCreatedAt(LocalDateTime.now());
         customer.setCountry("Madagascar");
 
-        String token = EmailTokenUtils.generateToken();
         CustomerLoginInfo customerLoginInfo = new CustomerLoginInfo();
         customerLoginInfo.setEmail(csvDto.getCustomer_email());
-        customerLoginInfo.setToken(token);
+        customerLoginInfo.setToken(EmailTokenUtils.generateToken());
         customerLoginInfo.setPasswordSet(false);
 
         customerLoginInfo.setCustomer(customer);

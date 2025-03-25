@@ -180,8 +180,9 @@ public class ExpenseService {
     public List<Expense> importCsv(MultipartFile file, User user) throws IOException, CsvValidationException {
         List<Expense> entities = new ArrayList<>();
         String filename = file.getOriginalFilename();
+        List<ExpenseCsvDto> dtos = genericCsvService.getDtosFromCsv(file, ExpenseCsvDto.class, filename);
 
-        for (ExpenseCsvDto dto : genericCsvService.getDtosFromCsv(file, ExpenseCsvDto.class, filename)) {
+        for (ExpenseCsvDto dto : dtos) {
             entities.add(convertToEntity(dto, user));
         }
         this.expenseRepository.saveAll(entities);
