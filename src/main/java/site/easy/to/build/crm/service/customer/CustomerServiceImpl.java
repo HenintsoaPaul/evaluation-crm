@@ -91,16 +91,20 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     // batch
-    public void saveBatch(List<Customer> customers) {
+    public void saveBatch(List<Customer> customers, Integer batchSize) {
         String sql = "INSERT INTO customer (name, email, country, user_id, profile_id, created_at) VALUES (?, ?, ?, ?, ?, ?)";
         Timestamp t = Timestamp.valueOf(LocalDateTime.now());
+        int userId = customers.get(0).getUser().getId();
 
-        jdbcTemplate.batchUpdate(sql, customers, customers.size(),
+        int listSize = customers.size();
+        batchSize = (batchSize == null || batchSize > listSize) ? listSize : batchSize;
+
+        jdbcTemplate.batchUpdate(sql, customers, batchSize,
                 (PreparedStatement ps, Customer customer) -> {
                     ps.setString(1, customer.getName());
                     ps.setString(2, customer.getEmail());
                     ps.setString(3, "Madagascar");
-                    ps.setInt(4, customer.getUser().getId());
+                    ps.setInt(4, userId);
                     ps.setInt(5, customer.getCustomerLoginInfo().getId());
                     ps.setTimestamp(6, t);
                 });
@@ -108,13 +112,12 @@ public class CustomerServiceImpl implements CustomerService {
 
     // csv
     @Transactional
-    public List<Customer> importCsv(MultipartFile file, User user, Authentication authentication, boolean sendEmail) throws IOException, CsvValidationException {
+    public List<Customer> importCsv(MultipartFile file, User user) throws IOException, CsvValidationException {
         List<Customer> entities = new ArrayList<>();
-        String filename = file.getOriginalFilename();
-        List<CustomerCsvDto> dtos = genericCsvService.getDtosFromCsv(file, CustomerCsvDto.class, filename);
+        List<CustomerCsvDto> dtos = genericCsvService.getDtosFromCsv(file, CustomerCsvDto.class, file.getOriginalFilename());
 
         for (CustomerCsvDto dto : dtos) {
-            entities.add(convertToEntity(dto, user, authentication, sendEmail));
+            entities.add(convertToEntity(dto, user));
         }
 
         return entities;
@@ -123,16 +126,12 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional
     public Customer convertToEntity(
             CustomerCsvDto csvDto,
-            User user,
-            Authentication authentication,
-            boolean sendEmail
+            User user
     ) {
         Customer customer = new Customer();
         customer.setEmail(csvDto.getCustomer_email());
         customer.setName(csvDto.getCustomer_name());
         customer.setUser(user);
-        customer.setCreatedAt(LocalDateTime.now());
-        customer.setCountry("Madagascar");
 
         CustomerLoginInfo customerLoginInfo = new CustomerLoginInfo();
         customerLoginInfo.setEmail(csvDto.getCustomer_email());
@@ -142,19 +141,60 @@ public class CustomerServiceImpl implements CustomerService {
         customerLoginInfo.setCustomer(customer);
         customerLoginInfoService.save(customerLoginInfo);
 
-        // email
-        if (!(authentication instanceof UsernamePasswordAuthenticationToken) && sendEmail && googleGmailApiService != null) {
-            OAuthUser oAuthUser = authenticationUtils.getOAuthUserFromAuthentication(authentication);
-            String baseUrl = environment.getProperty("app.base-url");
-
-            String url = baseUrl + "set-password?token=" + customerLoginInfo.getToken();
-            EmailTokenUtils.sendRegistrationEmail(
-                    customer.getEmail(), customer.getName(), url,
-                    oAuthUser, googleGmailApiService
-            );
-        }
-
         customer.setCustomerLoginInfo(customerLoginInfo);
         return customer;
     }
+
+
+//    // avec email
+//    @Transactional
+//    public List<Customer> importCsv(MultipartFile file, User user, Authentication authentication, boolean sendEmail) throws IOException, CsvValidationException {
+//        List<Customer> entities = new ArrayList<>();
+//        String filename = file.getOriginalFilename();
+//        List<CustomerCsvDto> dtos = genericCsvService.getDtosFromCsv(file, CustomerCsvDto.class, filename);
+//
+//        for (CustomerCsvDto dto : dtos) {
+//            entities.add(convertToEntity(dto, user, authentication, sendEmail));
+//        }
+//
+//        return entities;
+//    }
+//
+//    @Transactional
+//    public Customer convertToEntity(
+//            CustomerCsvDto csvDto,
+//            User user,
+//            Authentication authentication,
+//            boolean sendEmail
+//    ) {
+//        Customer customer = new Customer();
+//        customer.setEmail(csvDto.getCustomer_email());
+//        customer.setName(csvDto.getCustomer_name());
+//        customer.setUser(user);
+//        customer.setCreatedAt(LocalDateTime.now());
+//        customer.setCountry("Madagascar");
+//
+//        CustomerLoginInfo customerLoginInfo = new CustomerLoginInfo();
+//        customerLoginInfo.setEmail(csvDto.getCustomer_email());
+//        customerLoginInfo.setToken(EmailTokenUtils.generateToken());
+//        customerLoginInfo.setPasswordSet(false);
+//
+//        customerLoginInfo.setCustomer(customer);
+//        customerLoginInfoService.save(customerLoginInfo);
+//
+//        // email
+//        if (!(authentication instanceof UsernamePasswordAuthenticationToken) && sendEmail && googleGmailApiService != null) {
+//            OAuthUser oAuthUser = authenticationUtils.getOAuthUserFromAuthentication(authentication);
+//            String baseUrl = environment.getProperty("app.base-url");
+//
+//            String url = baseUrl + "set-password?token=" + customerLoginInfo.getToken();
+//            EmailTokenUtils.sendRegistrationEmail(
+//                    customer.getEmail(), customer.getName(), url,
+//                    oAuthUser, googleGmailApiService
+//            );
+//        }
+//
+//        customer.setCustomerLoginInfo(customerLoginInfo);
+//        return customer;
+//    }
 }
