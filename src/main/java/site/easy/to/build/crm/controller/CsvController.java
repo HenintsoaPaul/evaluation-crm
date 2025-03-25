@@ -3,14 +3,18 @@ package site.easy.to.build.crm.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import site.easy.to.build.crm.csv.CsvValidationException;
+import site.easy.to.build.crm.entity.Customer;
 import site.easy.to.build.crm.entity.OAuthUser;
 import site.easy.to.build.crm.entity.User;
+import site.easy.to.build.crm.service.customer.CustomerServiceImpl;
 import site.easy.to.build.crm.service.user.UserServiceImpl;
 import site.easy.to.build.crm.util.AuthenticationUtils;
 
@@ -22,6 +26,7 @@ import java.util.List;
 public class CsvController {
 
     private final UserServiceImpl userService;
+    private final CustomerServiceImpl customerService;
     private final AuthenticationUtils authenticationUtils;
 
     @PostMapping("/user")
@@ -51,12 +56,12 @@ public class CsvController {
         return "redirect:/manager/register-user";
     }
 
-    @PostMapping
-    public String genericImport(
+    @PostMapping("/fichier3")
+    public String fichier3(
             @RequestParam("file") MultipartFile file,
-            @RequestParam("tableName") String tableName,
             Authentication authentication,
-            RedirectAttributes redirectAttributes
+            RedirectAttributes redirectAttributes,
+            @RequestParam(required = false, defaultValue = "false") boolean sendEmail
     ) {
         try {
             int userId = authenticationUtils.getLoggedInUserId(authentication);
@@ -64,24 +69,18 @@ public class CsvController {
             if (loggedInUser.isInactiveUser()) {
                 return "error/account-inactive";
             }
-            OAuthUser oAuthUser = authenticationUtils.getOAuthUserFromAuthentication(authentication);
 
-            String msg;
-            switch (tableName) {
-                case "user":
-                    userService.importCsv(file, oAuthUser);
-                    msg = "Import dans la table user!";
-                    break;
-                default:
-                    msg = "Import dans la table user!";
-                    break;
-            }
-            redirectAttributes.addFlashAttribute("messageImp", msg);
-        } catch (Exception e) {
-            e.printStackTrace();
-            redirectAttributes.addFlashAttribute("errorImp", e.getMessage());
+            // import csv
+            List<Customer> customers = customerService.importCsv(file, loggedInUser, authentication, sendEmail);
+
+            String msg = "Fichier CSV traité avec succès : " + customers.size() + " lignes insérées";
+            redirectAttributes.addFlashAttribute("message", msg);
+        } catch (CsvValidationException e) {
+            redirectAttributes.addFlashAttribute("validationErrors", e.getErrors());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
         }
-
-        return "redirect:/data/management";
+        return "redirect:/manager/register-user";
     }
 }
