@@ -1,0 +1,14 @@
+customer_email,Budget
+customer1@yopmail.com,1800000
+mail2@test.com,450000
+customer1@yopmail.com,350000
+verylongemailaddressthatisoverthelimit@example.com,1000000000
+short@em.com,100
+missingemail,,500000
+,
+invalidemail@com,200000
+customer3@yopmail.com,not_a_number
+decimal_budget@example.com,12345.67
+negative_budget@example.com,-5000
+zero_budget@example.com,0
+large_negative@example.com,-999999999
