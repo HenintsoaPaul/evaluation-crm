@@ -110,11 +110,19 @@
                     <h4 class="card-title">Generation de data</h4>
                     <form th:action="@{/data/management/gen-table}" method="post">
                         <div class="mt-3">
-                            <label for="table-select-gen">Sélectionner une table :</label>
-                            <select id="table-select-gen" class="form-control" name="tableName" required>
-                                <option value="">-- Choisir une table --</option>
-                                <option th:each="table : ${tablesGen}" th:value="${table}" th:text="${table}"></option>
-                            </select>
+                            <div class="row">
+                                <div class="col-6">
+                                    <label for="table-select-gen">Sélectionner une table :</label>
+                                    <select id="table-select-gen" class="form-control" name="tableName" required>
+                                        <option value="">-- Choisir une table --</option>
+                                        <option th:each="table : ${tablesGen}" th:value="${table}" th:text="${table}"></option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label for="nb-ligne-gen">Nb Rows :</label>
+                                    <input id="nb-ligne-gen" type="number" class="form-control" name="nbRows" min="1" step="1" required>
+                                </div>
+                            </div>
                             <button id="clear-table-gen" class="btn btn-warning mt-2" type="submit">Generer data
                             </button>
                         </div>
