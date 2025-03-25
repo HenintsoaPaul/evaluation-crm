@@ -58,11 +58,6 @@ public class Ticket {
     @JsonView(POV.Expense.class)
     private LocalDateTime createdAt;
 
-    @ManyToOne
-    @JoinColumn(name = "budget_id")
-    @JsonView(POV.Expense.class)
-    private Budget budget;
-
     @JsonBackReference
     @OneToOne(mappedBy = "ticket")
     private Expense expense;
@@ -70,7 +65,7 @@ public class Ticket {
     public Ticket() {
     }
 
-    public Ticket(String subject, String description, String status, String priority, User manager, User employee, Customer customer, LocalDateTime createdAt, Budget budget) {
+    public Ticket(String subject, String description, String status, String priority, User manager, User employee, Customer customer, LocalDateTime createdAt) {
         this.subject = subject;
         this.description = description;
         this.status = status;
@@ -79,6 +74,5 @@ public class Ticket {
         this.employee = employee;
         this.customer = customer;
         this.createdAt = createdAt;
-        this.budget = budget;
     }
 }
