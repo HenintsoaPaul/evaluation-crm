@@ -50,6 +50,7 @@ public class LoginApiController {
             response.setId(user.getId());
             response.setEmail(user.getEmail());
             response.setRole(user.getRoles().get(0).getName());
+            response.setToken(user.getToken());
 
             return ResponseEntity.ok(new ApiOkResponse<>("Connexion ok!", response));
 

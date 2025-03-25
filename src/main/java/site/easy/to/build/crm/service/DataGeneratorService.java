@@ -2,6 +2,7 @@ package site.easy.to.build.crm.service;
 
 import com.github.javafaker.Faker;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,8 +30,15 @@ public class DataGeneratorService {
     ) {
     }
 
+    public record FkColumn(
+            String name,
+            String refTableName,
+            String refColumnName
+    ) {
+    }
+
     private final JdbcTemplate jdbcTemplate;
-    private static final Faker faker = new Faker();
+    private static final Faker faker = new Faker(new Locale("fr"));
     private static final Map<String, Function<ColumnMeta, Object>> TYPE_HANDLERS = new HashMap<>();
     private static final Set<String> SKIP_GENERATION_TYPES = Set.of("BLOB", "BINARY", "VARBINARY");
 
@@ -51,15 +59,67 @@ public class DataGeneratorService {
         TYPE_HANDLERS.put("DOUBLE", c -> faker.number().randomDouble(4, 0, 10000));
     }
 
-    public Map<String, Object> generateData(String tableName, Map<String, Object> overrides) {
+    public void genData(String tableName, int rows) {
+        for (int i = 0; i < rows; i++) {
+            saveGeneratedData(tableName, generateData(tableName));
+        }
+    }
+
+    public Map<String, Object> generateData(String tableName) {
         List<ColumnMeta> columns = getTableSchema(tableName);
         Map<String, Object> data = new LinkedHashMap<>();
 
+        List<FkColumn> fkColumns = getForeignKeysColumns(tableName);
+        List<String> fkColumnNames = fkColumns.stream().map(fk -> fk.name).toList();
+
         columns.forEach(column -> {
-            if (overrides.containsKey(column.name())) {
-                data.put(column.name(), overrides.get(column.name()));
-            } else if (!column.isAutoIncrement()) {
-                data.put(column.name(), generateColumnValue(column));
+            if (!column.isAutoIncrement()) {
+
+                // if fk column
+                if (fkColumnNames.contains(column.name())) {
+
+                    FkColumn fkColumnObj = null;
+                    for (FkColumn fkColumn : fkColumns) {
+                        if (column.name().equals(fkColumn.name())) {
+                            fkColumnObj = fkColumn;
+                            break;
+                        }
+                    }
+
+                    // select refColumnName from refTableName limit 1
+                    assert fkColumnObj != null;
+                    Integer idKey;
+                    try {
+                        idKey = jdbcTemplate.queryForObject(
+                                "select " + fkColumnObj.refColumnName + " as idKey from " + fkColumnObj.refTableName + " limit 1",
+                                (rs, rownum) -> rs.getInt("idKey")
+                        );
+                    } catch (EmptyResultDataAccessException e) {
+                        idKey = null;
+                    }
+
+                    // aucune ligne existe pour la table ref
+                    if (idKey == null) {
+                        // insertion de la nouvelle ligne pour la fk
+                        String refTable = fkColumnObj.refTableName;
+                        Map<String, Object> newData = generateData(refTable);
+                        saveGeneratedData(refTable, newData);
+
+                        // on selecte la nouvelle ligne
+                        idKey = jdbcTemplate.queryForObject(
+                                "select " + fkColumnObj.refColumnName + " as idKey from " + fkColumnObj.refTableName + " limit 1",
+                                (rs, rownum) -> rs.getInt("idKey")
+                        );
+                        data.put(column.name(), idKey);
+                    } else {
+                        data.put(column.name(), idKey);
+                    }
+
+                    // if not fk column
+                } else {
+                    data.put(column.name(), generateColumnValue(column));
+                }
+
             }
         });
 
@@ -72,10 +132,13 @@ public class DataGeneratorService {
                 .map(k -> "?")
                 .collect(Collectors.joining(", "));
 
+        String k = "INSERT INTO " + tableName + " (" + columns + ") VALUES (" + values + ")";
         jdbcTemplate.update(
-                "INSERT INTO " + tableName + " (" + columns + ") VALUES (" + values + ")",
+                k,
                 data.values().toArray()
         );
+
+        System.out.println("insert into " + tableName);
     }
 
     private Object generateColumnValue(ColumnMeta column) {
@@ -98,20 +161,20 @@ public class DataGeneratorService {
     private List<ColumnMeta> getTableSchema(String tableName) {
         return jdbcTemplate.query(
                 """
-                SELECT 
-                    COLUMN_NAME, 
-                    DATA_TYPE, 
-                    CHARACTER_MAXIMUM_LENGTH,
-                    NUMERIC_PRECISION,
-                    NUMERIC_SCALE,
-                    COLUMN_KEY,
-                    EXTRA,
-                    IS_NULLABLE
-                FROM INFORMATION_SCHEMA.COLUMNS 
-                WHERE TABLE_SCHEMA = DATABASE() 
-                    AND TABLE_NAME = ?
-                ORDER BY ORDINAL_POSITION
-                """,
+                        SELECT 
+                            COLUMN_NAME, 
+                            DATA_TYPE, 
+                            CHARACTER_MAXIMUM_LENGTH,
+                            NUMERIC_PRECISION,
+                            NUMERIC_SCALE,
+                            COLUMN_KEY,
+                            EXTRA,
+                            IS_NULLABLE
+                        FROM INFORMATION_SCHEMA.COLUMNS 
+                        WHERE TABLE_SCHEMA = DATABASE() 
+                            AND TABLE_NAME = ?
+                        ORDER BY ORDINAL_POSITION
+                        """,
                 (rs, rowNum) -> new ColumnMeta(
                         rs.getString("COLUMN_NAME"),
                         rs.getString("DATA_TYPE"),
@@ -126,16 +189,48 @@ public class DataGeneratorService {
         );
     }
 
+    private List<FkColumn> getForeignKeysColumns(String tableName) {
+        return jdbcTemplate.query(
+                """
+                        SELECT
+                            COLUMN_NAME,
+                            REFERENCED_TABLE_NAME,
+                            REFERENCED_COLUMN_NAME
+                        FROM
+                            INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+                        WHERE
+                            TABLE_SCHEMA = DATABASE()
+                          AND TABLE_NAME = ?
+                          AND REFERENCED_TABLE_NAME IS NOT NULL
+                          AND REFERENCED_COLUMN_NAME IS NOT NULL
+                        ORDER BY ORDINAL_POSITION
+                        """,
+                (rs, rowNum) -> new FkColumn(
+                        rs.getString("COLUMN_NAME"),
+                        rs.getString("REFERENCED_TABLE_NAME"),
+                        rs.getString("REFERENCED_COLUMN_NAME")
+                ),
+                tableName
+        );
+    }
+
     private static Object handleString(ColumnMeta column) {
         int maxLength = Math.min(column.columnSize(), 255);
         return switch (column.name().toLowerCase()) {
             case "email" -> faker.internet().emailAddress();
-            case "firstname" -> faker.name().firstName();
-            case "lastname" -> faker.name().lastName();
+            case "firstname", "first_name" -> faker.name().firstName();
+            case "lastname", "last_name" -> faker.name().lastName();
+            case "username", "user_name" -> faker.name().username();
+            case "name" -> faker.name().name();
             case "phone" -> faker.phoneNumber().phoneNumber();
             case "address" -> faker.address().streetAddress();
             case "city" -> faker.address().city();
             case "country" -> faker.address().country();
+            case "description" -> faker.lorem().sentence();
+            case "position" -> faker.job().position();
+            case "twitter" -> faker.internet().url();
+            case "facebook" -> faker.internet().url();
+            case "youtube" -> faker.internet().url();
             default -> faker.lorem().characters(1, maxLength);
         };
     }

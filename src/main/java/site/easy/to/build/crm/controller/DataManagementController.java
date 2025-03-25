@@ -51,12 +51,15 @@ public class DataManagementController {
     }
 
     @PostMapping("/gen-table")
-    public String genDataForTable(@RequestParam(name = "tableName") String tableName, RedirectAttributes redirectAttributes) {
+    public String genDataForTable(
+            @RequestParam String tableName,
+            @RequestParam int nbRows,
+            RedirectAttributes redirectAttributes
+    ) {
         try {
-            Map<String, Object> data = generatorService.generateData(tableName, new HashMap<>());
-            generatorService.saveGeneratedData(tableName, data);
+            generatorService.genData(tableName, nbRows);
 
-            redirectAttributes.addFlashAttribute("messageGen", data.size() + " ont ete inseres.");
+            redirectAttributes.addFlashAttribute("messageGen", nbRows + " ont ete inseres.");
         } catch (Exception e) {
             e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorGen", e.getMessage());
