@@ -6,9 +6,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import site.easy.to.build.crm.entity.Budget;
-import site.easy.to.build.crm.entity.Expense;
-import site.easy.to.build.crm.entity.User;
+import site.easy.to.build.crm.entity.*;
+import site.easy.to.build.crm.repository.BudgetTotalRepository;
 import site.easy.to.build.crm.repository.ExpenseRepository;
 import site.easy.to.build.crm.service.BudgetAlertConfigService;
 import site.easy.to.build.crm.service.ExpenseService;
@@ -26,6 +25,7 @@ public class ExpenseController {
     private final UserServiceImpl userService;
     private final ExpenseRepository expenseRepository;
     private final BudgetAlertConfigService budgetAlertConfigService;
+    private final BudgetTotalRepository budgetTotalRepository;
 
     // crud methods
     @GetMapping
@@ -68,15 +68,17 @@ public class ExpenseController {
             return "error/not-found";
         }
 
-        Budget budget;
+        int customerId;
         if (expense.getLead() == null) {
-            budget = expense.getTicket().getBudget();
+            customerId = expense.getTicket().getCustomer().getCustomerId();
         } else {
-            budget = expense.getLead().getBudget();
+            customerId = expense.getLead().getCustomer().getCustomerId();
         }
+        BudgetTotal budgetTotal = budgetTotalRepository.findByCustomerId(customerId)
+                .orElseThrow(() -> new RuntimeException("Budget Total not found"));
 
         model.addAttribute("budgetAlertConfig", budgetAlertConfigService.findCurrent());
-        model.addAttribute("budget", budget);
+        model.addAttribute("budgetTotal", budgetTotal);
         model.addAttribute("expense", expense);
         return "expense/update-expense";
     }
