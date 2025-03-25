@@ -157,14 +157,6 @@
                                            required>
                                 </div>
 
-                                <!--budget-->
-                                <label class="m-t-20" for="budget">Budget:</label>
-                                <div class="input-group">
-                                    <select name="budgetId" id="budget" class="form-control" required>
-                                        <option value="">Choose budget</option>
-                                    </select>
-                                </div>
-
                                 <div class="row">
                                     <!--budget_alert_config-->
                                     <div class="col-6">
@@ -292,25 +284,14 @@
 
             if (customerId !== "") {
                 $.ajax({
-                    url: '/budget/api',
+                    url: '/budget/api/total',
                     data: {customerId: customerId},
                     type: 'GET',
-                    beforeSend: function () {
-                        $('#budget').prop('disabled', true);
-                    },
                     success: function (response) {
-                        $('#budget').empty();
-                        $('#budget').append($('<option></option>').text('Sélectionnez un budget'));
-
                         console.log(response);
-
-                        $.each(response, function (index, budget) {
-                            $('#budget').append($('<option></option>')
-                                .attr('value', `${budget.id}--${budget.amountLimit}--${budget.amountRemain}`)
-                                .text(`${budget.name}--${budget.amountLimit}--${budget.amountRemain}`));
-                        });
-
-                        $('#budget').prop('disabled', false);
+                        $('#amount_alerte').attr('value', response.amountTotal * (tauxAlerte / 100));
+                        $('#amount_limit').attr('value', response.amountTotal);
+                        $('#amount_remain').attr('value', response.amountRemain);
                     },
                     error: function (xhr, status, error) {
                         console.error(error);
@@ -318,28 +299,6 @@
                         $('#budget').prop('disabled', false);
                     }
                 });
-            } else {
-                $('#budget').empty();
-                $('#budget').append($('<option></option>').text('Sélectionnez un budget'));
-            }
-        });
-
-        // update budget inputs
-        $('#budget').change(function () {
-            const budgetId = $(this).val();
-
-            const parts = $(this).val().split("--");
-            const amountLimit = parseFloat(parts[1]);
-            const amountRemain = parseFloat(parts[2]);
-
-            if (budgetId !== "") {
-                $('#amount_alerte').attr('value', amountLimit * (tauxAlerte / 100));
-                $('#amount_limit').attr('value', amountLimit);
-                $('#amount_remain').attr('value', amountRemain);
-            } else {
-                $('#amount_alerte').attr('value', null);
-                $('#amount_limit').attr('value', null);
-                $('#amount_remain').attr('value', null);
             }
         });
 
@@ -372,10 +331,8 @@
                 $('#amount_expense').removeClass('is-invalid');
             }
 
-            const budget = $('#budget').val();
-            const parts = budget.split("--");
-            const amountLimit = parseFloat(parts[1]);
-            const amountRemain = parseFloat(parts[2]);
+            const amountLimit = $('#amount_limit').val();
+            const amountRemain = $('#amount_remain').val();
             amount = parseFloat(amount);
 
             const futurRemain = amountRemain - amount;
