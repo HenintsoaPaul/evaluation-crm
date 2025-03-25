@@ -181,11 +181,14 @@ public class ExpenseService {
 
     // batch
     @Transactional
-    public void saveBatch(List<Expense> expenses) {
+    public void saveBatch(List<Expense> expenses, Integer batchSize) {
         String sql = "INSERT INTO expense (creation_date, amount, lead_id, ticket_id) VALUES (?, ?, ?, ?)";
         Timestamp t = Timestamp.valueOf(LocalDateTime.now());
 
-        jdbcTemplate.batchUpdate(sql, expenses, expenses.size(),
+        int listSize = expenses.size();
+        batchSize = (batchSize == null || batchSize > listSize) ? listSize : batchSize;
+
+        jdbcTemplate.batchUpdate(sql, expenses, batchSize,
                 (PreparedStatement ps, Expense expense) -> {
                     ps.setTimestamp(1, t);
                     ps.setDouble(2, expense.getAmount());
@@ -202,8 +205,7 @@ public class ExpenseService {
     @Transactional
     public List<Expense> importCsv(MultipartFile file, User user) throws IOException, CsvValidationException {
         List<Expense> entities = new ArrayList<>();
-        String filename = file.getOriginalFilename();
-        List<ExpenseCsvDto> dtos = genericCsvService.getDtosFromCsv(file, ExpenseCsvDto.class, filename);
+        List<ExpenseCsvDto> dtos = genericCsvService.getDtosFromCsv(file, ExpenseCsvDto.class, file.getOriginalFilename());
 
         for (ExpenseCsvDto dto : dtos) {
             entities.add(convertToEntity(dto, user));
@@ -231,7 +233,7 @@ public class ExpenseService {
             ticket.setEmployee(null);
             ticket.setSubject(csvDto.getSubject_or_name());
             ticket.setStatus(csvDto.getStatus());
-            ticket.setPriority(getTicketPriority());
+            ticket.setPriority("low");
 
             expense.setTicket(ticket);
             ticketRepository.save(ticket);
@@ -258,9 +260,9 @@ public class ExpenseService {
         return expense;
     }
 
-    private final String[] ticketPriorityArray = List.of("low", "medium", "high", "closed", "urgent", "critical").toArray(new String[0]);
-
-    private String getTicketPriority() {
-        return ticketPriorityArray[0];
-    }
+//    private final String[] ticketPriorityArray = List.of("low", "medium", "high", "closed", "urgent", "critical").toArray(new String[0]);
+//
+//    private String getTicketPriority() {
+//        return ticketPriorityArray[0];
+//    }
 }

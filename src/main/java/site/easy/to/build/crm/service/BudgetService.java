@@ -68,11 +68,14 @@ public class BudgetService {
 
     // batch
     @Transactional
-    public void saveBatch(List<Budget> budgets) {
+    public void saveBatch(List<Budget> budgets, Integer batchSize) {
         String sql = "INSERT INTO budget (creation_date, amount, customer_id) VALUES (?, ?, ?)";
         Timestamp t = Timestamp.valueOf(LocalDateTime.now());
 
-        jdbcTemplate.batchUpdate(sql, budgets, budgets.size(),
+        int listSize = budgets.size();
+        batchSize = (batchSize == null || batchSize > listSize) ? listSize : batchSize;
+
+        jdbcTemplate.batchUpdate(sql, budgets, batchSize,
                 (PreparedStatement ps, Budget budget) -> {
                     ps.setTimestamp(1, t);
                     ps.setDouble(2, budget.getAmount());
