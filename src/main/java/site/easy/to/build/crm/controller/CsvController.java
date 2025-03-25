@@ -3,6 +3,8 @@ package site.easy.to.build.crm.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.*;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -50,33 +52,41 @@ public class CsvController {
             @RequestParam(required = false, defaultValue = "false") boolean controlSumExpenseVsSumBudget,
             Model model
     ) {
+        int userId = authenticationUtils.getLoggedInUserId(authentication);
+        User loggedInUser = userService.findById(userId);
+        if (loggedInUser.isInactiveUser()) {
+            return "error/account-inactive";
+        }
+
+        HashMap<String, List<CsvErrorWrapper>> errorsPerFile = new HashMap<>();
+        List<Customer> customers = new ArrayList<>();
+        List<Budget> budgets = new ArrayList<>();
+        List<Expense> expenses = new ArrayList<>();
+
+        // Init transaction
+        DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+        def.setName("myTransaction");
+        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+        TransactionStatus status = transactionManager.getTransaction(def);
         try {
-            int userId = authenticationUtils.getLoggedInUserId(authentication);
-            User loggedInUser = userService.findById(userId);
-            if (loggedInUser.isInactiveUser()) {
-                return "error/account-inactive";
-            }
-
-            HashMap<String, List<CsvErrorWrapper>> errorsPerFile = new HashMap<>();
-            List<Customer> customers = new ArrayList<>();
-            List<Budget> budgets = new ArrayList<>();
-            List<Expense> expenses = new ArrayList<>();
-
-            // import csv
+            // csv -> dto -> entity
             try {
                 customers = customerService.importCsv(fileCustomer, loggedInUser);
             } catch (CsvValidationException e) {
                 errorsPerFile.put("customers", e.getErrors());
+                System.out.println("Len customers err : " + e.getErrors().size());
             }
             try {
                 budgets = budgetService.importCsv(fileBudget);
             } catch (CsvValidationException e) {
                 errorsPerFile.put("budgets", e.getErrors());
+                System.out.println("Len budgets err : " + e.getErrors().size());
             }
             try {
                 expenses = expenseService.importCsv(fileExpense, loggedInUser);
             } catch (CsvValidationException e) {
                 errorsPerFile.put("expenses", e.getErrors());
+                System.out.println("Len expenses err : " + e.getErrors().size());
             }
 
             // control expense > budget
@@ -84,17 +94,21 @@ public class CsvController {
                 validateSumExpenseVsSumBudget(expenses, budgets, errorsPerFile);
             }
 
-            // batch save
-            this.saveBatches(customers, budgets, expenses);
-
             if (errorsPerFile.isEmpty()) {
+                this.saveBatches(customers, budgets, expenses);
                 setSuccessAttributes(redirectAttributes, customers, budgets, expenses);
+
+                transactionManager.commit(status);
             } else {
+                transactionManager.rollback(status);
+
                 setErrorAttributes(model, errorsPerFile);
                 return "data-management/csv-errors";
             }
 
         } catch (Exception ex) {
+            transactionManager.rollback(status);
+
             ex.printStackTrace();
             redirectAttributes.addFlashAttribute("errorImp", ex.getMessage());
         }
