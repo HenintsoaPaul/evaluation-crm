@@ -508,12 +508,22 @@ CREATE TABLE IF NOT EXISTS budget_alert_config
 CREATE TABLE IF NOT EXISTS budget
 (
     id            INT AUTO_INCREMENT,
-    name          VARCHAR(50),
     creation_date DATETIME       NOT NULL,
-    amount_limit  DECIMAL(15, 2) NOT NULL,
+    amount        DECIMAL(15, 2) NOT NULL,
+    customer_id   INT unsigned   NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (customer_id) REFERENCES customer (customer_id)
+);
+
+CREATE TABLE IF NOT EXISTS budget_total
+(
+    id            INT AUTO_INCREMENT,
+    name          VARCHAR(50),
+    amount_total  DECIMAL(15, 2) NOT NULL,
     amount_remain DECIMAL(15, 2) NOT NULL,
     customer_id   INT unsigned   NOT NULL,
     PRIMARY KEY (id),
+    UNIQUE (customer_id),
     FOREIGN KEY (customer_id) REFERENCES customer (customer_id)
 );
 
@@ -540,18 +550,6 @@ CREATE TABLE histo_expense
     PRIMARY KEY (id),
     FOREIGN KEY (expense_id) REFERENCES expense (id)
 );
-
-ALTER TABLE trigger_ticket
-    ADD COLUMN budget_id INT,
-    ADD CONSTRAINT fk_nom_contrainte1
-        FOREIGN KEY (budget_id)
-            REFERENCES budget(id);
-
-ALTER TABLE trigger_lead
-    ADD COLUMN budget_id INT,
-    ADD CONSTRAINT fk_nom_contrainte2
-        FOREIGN KEY (budget_id)
-            REFERENCES budget(id);
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 

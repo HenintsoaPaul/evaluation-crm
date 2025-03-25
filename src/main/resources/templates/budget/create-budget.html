@@ -73,26 +73,17 @@
                             <h4 class="card-title">Create New Budget</h4>
                             <form th:object="${budget}" th:action="@{/budget/create-budget}" id="email-form"
                                   method="post">
-                                <!--name-->
-                                <label class="m-t-20" for="name">Name:</label>
-                                <div class="input-group">
-                                    <input type="text" id="name" th:field="*{name}" class="form-control">
-                                </div>
-                                <div class="input-group">
-                                    <span class="text-danger font-weight-bold" th:if="${#fields.hasErrors('name')}"
-                                          th:errors="*{name}"></span>
-                                </div>
 
                                 <!--amount_limit-->
-                                <label class="m-t-20" for="amountLimit">Amount Limit:</label>
+                                <label class="m-t-20" for="amount">Amount :</label>
                                 <div class="input-group">
-                                    <input type="number" id="amountLimit" th:field="*{amountLimit}"
+                                    <input type="number" id="amount" th:field="*{amount}"
                                            class="form-control">
                                 </div>
                                 <div class="input-group">
                                     <span class="text-danger font-weight-bold"
-                                          th:if="${#fields.hasErrors('amountLimit')}"
-                                          th:errors="*{amountLimit}"></span>
+                                          th:if="${#fields.hasErrors('amount')}"
+                                          th:errors="*{amount}"></span>
                                 </div>
 
                                 <!--customer-->

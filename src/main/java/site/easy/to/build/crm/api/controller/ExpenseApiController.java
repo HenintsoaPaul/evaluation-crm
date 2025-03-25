@@ -1,18 +1,19 @@
 package site.easy.to.build.crm.api.controller;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import site.easy.to.build.crm.api.*;
-import site.easy.to.build.crm.entity.Budget;
 import site.easy.to.build.crm.entity.BudgetAlertConfig;
+import site.easy.to.build.crm.entity.BudgetTotal;
 import site.easy.to.build.crm.entity.Expense;
+import site.easy.to.build.crm.repository.BudgetTotalRepository;
 import site.easy.to.build.crm.service.BudgetAlertConfigService;
 import site.easy.to.build.crm.service.ExpenseService;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -20,6 +21,16 @@ import java.util.List;
 @RequestMapping("/api/expenses")
 @RequiredArgsConstructor
 public class ExpenseApiController {
+
+    private final BudgetTotalRepository budgetTotalRepository;
+
+    @AllArgsConstructor
+    private class ExpenseCpl {
+        @JsonView(POV.Expense.class)
+        private Expense expense;
+        @JsonView(POV.Expense.class)
+        private BudgetTotal budgetTotal;
+    }
 
     private final ExpenseService expenseService;
     private final BudgetAlertConfigService budgetAlertConfigService;
@@ -56,16 +67,19 @@ public class ExpenseApiController {
 
     @GetMapping("/{id}")
     @JsonView({POV.Expense.class})
-    public Expense findById(@PathVariable int id) throws ApiServerException {
-        return expenseService.findById(id);
-    }
+    public ExpenseCpl findById(@PathVariable int id) throws ApiServerException {
+        Expense e = expenseService.findById(id);
 
-//    @GetMapping("/by-client")
-//    public ResponseEntity<ApiResponse<?>> findByClient(@RequestParam int clientId) {
-//        List<Expense> expenses = expenseService.findByCustomerId(clientId);
-//        ApiResponse<?> response = new ApiOkResponse<>("Toutes les depenses pour le customer " + clientId, expenses);
-//        return ResponseEntity.ok(response);
-//    }
+        int customerId;
+        if (e.getLead() != null) {
+            customerId = e.getLead().getCustomer().getCustomerId();
+        } else {
+            customerId = e.getTicket().getCustomer().getCustomerId();
+        }
+        BudgetTotal bt = budgetTotalRepository.findByCustomerId(customerId).orElse(null);
+
+        return new ExpenseCpl(e, bt);
+    }
 
     @GetMapping("/by-client")
     @JsonView({POV.Expense.class})
@@ -81,23 +95,13 @@ public class ExpenseApiController {
         ApiResponse<?> response;
         try {
             HashMap<String, Object> map = expenseService.updateById(expenseId, newAmount);
-            Budget budget = (Budget) map.get("budget");
-            double newBudgetRemain = budget.getAmountRemain();
 
+            BudgetTotal budgetTotal = (BudgetTotal) map.get("budgetTotal");
             BudgetAlertConfig bac = budgetAlertConfigService.findCurrent();
-            double alerte = budget.getAmountLimit() * (bac.getRate() / 100);
 
-            List<String> messages = new ArrayList<>();
-            messages.add("Modification du budget '" + budget.getName() + "' par la mise a jour de l'expense '" + expenseId + "'");
-            if (alerte <= newBudgetRemain) {
-                messages.add("Seuil d'alerte de depense atteint pour le budget! seuil: " + alerte + " | reste: " + newBudgetRemain);
-            }
-            if (newBudgetRemain < 0) {
-                messages.add("Depassement de budget! reste: " + newBudgetRemain);
-            }
-
-            response = new ApiOkResponse<>("Data mis a jour", messages);
+            response = new ApiOkResponse<>("Data mis a jour", expenseService.getExpenseLog(bac, budgetTotal, expenseId));
             return ResponseEntity.ok(response);
+
         } catch (ApiServerException e) {
             response = new ApiBadResponse<>(e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);

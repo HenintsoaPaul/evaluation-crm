@@ -1,0 +1,11 @@
+customer_email,customer_name
+customer1@yopmail.com,john doe
+mail2@test.com,jane smith
+verylongemailaddressthatisoverthelimit@example.com,Very Long Name That Exceeds Normal Limits
+short@em.com,JD
+missingemail,John Doe
+,
+invalidemail@com,Jane Smith
+customer3@yopmail.com,
+customer4@yopmail.com,Name With Special Characters! @#$%
+customer5@yopmail.com,NameWithNoSpaces

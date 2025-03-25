@@ -2,19 +2,17 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 
 <div th:insert="~{/general/head.html}"></div>
-<meta name="_csrf" content="${_csrf.token}"/>
-<meta name="_csrf_header" content="${_csrf.headerName}"/>
-
+<meta name="csrf" content="${_csrf.token}"/>
+<meta name="csrf_header" content="${_csrf.headerName}"/>
+<link rel="stylesheet" th:href="@{/css/bootstrap-wysihtml5.css}"/>
 <!-- Editable CSS -->
-<link rel="stylesheet" type="text/css"
-      th:href="@{/css/dataTables.bootstrap4.css}">
-<link rel="stylesheet" type="text/css"
-      th:href="@{/css/responsive.dataTables.min.css}">
-
+<link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" type="text/css"/>
 <!-- Custom CSS -->
 <link th:href="@{/css/style.min.css}" rel="stylesheet">
 <!-- page css -->
 <link th:href="@{/css/pages/inbox.css}" rel="stylesheet">
+<!--<link th:href="@{/css/form-icheck.css}" rel="stylesheet">-->
+<link th:href="@{/css/ribbon-page.css}" rel="stylesheet">
 
 <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
 <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -70,44 +68,67 @@
             <!-- ============================================================== -->
             <!-- Start Page Content -->
             <!-- ============================================================== -->
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <h4 class="card-title">Expenses</h4>
-                            <div class="table-responsive m-t-40">
-                                <table id="config-table" class="table display table-bordered table-striped no-wrap">
-                                    <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Amount</th>
-                                        <th>Created At</th>
-                                        <th>Lead</th>
-                                        <th>Ticket</th>
-                                        <th>Edit</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <tr th:if="${expenses != null}" th:each="expense : ${expenses}">
-                                        <td th:text="${expense.id}"></td>
-                                        <td th:text="${expense.getAmount()}"></td>
-                                        <td th:text="${expense.getCreationDate()}"></td>
-                                        <td>
-                                            <span th:if="${expense.getLead() != null}" th:text="${expense.getLead().getLeadId()}"></span>
-                                        </td>
-                                        <td>
-                                            <span th:if="${expense.getTicket() != null}" th:text="${expense.getTicket().getTicketId()}"></span>
-                                        </td>
-                                        <td><a th:href="${home + 'expense/update-expense/' + expense.id}"><i
-                                                class="fas fa-edit"></i></a></td>
-                                    </tr>
-                                    </tbody>
-                                </table>
+
+            <!-- all -->
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Import initial data </h4>
+                    <form th:action="@{/import/csv/all}" id="all-csv-form" method="post"
+                          enctype="multipart/form-data">
+                        <div class="mt-3">
+                            <label class="m-t-20" for="customer-file">Customer :</label>
+                            <div class="input-group">
+                                <input type="file"
+                                       id="customer-file"
+                                       name="fileCustomer"
+                                       accept=".csv"
+                                       class="form-control"
+                                       required>
                             </div>
                         </div>
+                        <div class="mt-3">
+                            <label class="m-t-20" for="budget-file">Budget :</label>
+                            <div class="input-group">
+                                <input type="file"
+                                       id="budget-file"
+                                       name="fileBudget"
+                                       accept=".csv"
+                                       class="form-control"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <label class="m-t-20" for="expense-file">Expense :</label>
+                            <div class="input-group">
+                                <input type="file"
+                                       id="expense-file"
+                                       name="fileExpense"
+                                       accept=".csv"
+                                       class="form-control"
+                                       required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary m-t-20">Import Csv</button>
+                    </form>
+
+                    <br>
+                    <div th:if="${messageImp != null}" class="alert alert-success alert-dismissible fade show"
+                         role="alert">
+                        <strong>Success!</strong> [[${messageImp}]]
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                    <div th:if="${errorImp != null}" class="alert alert-danger alert-dismissible fade show"
+                         role="alert">
+                        <strong>Erreur!</strong> [[${errorImp}]]
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
                     </div>
                 </div>
             </div>
+
             <!-- ============================================================== -->
             <!-- End Page Content -->
             <!-- ============================================================== -->
@@ -142,9 +163,8 @@
 <!-- All Jquery -->
 <!-- ============================================================== -->
 <script th:inline="javascript">
-    const home = /*[[${home}]]*/ null;
+    var home = /*[[${home}]]*/ null;
 </script>
-
 <script th:src="@{/js/library/jquery-3.2.1.min.js}" type="text/javascript"></script>
 <!--    &lt;!&ndash; Bootstrap tether Core JavaScript &ndash;&gt;-->
 <script th:src="@{/js/library/popper.min.js}" type="text/javascript"></script>
@@ -161,12 +181,9 @@
 <!--Custom JavaScript -->
 <script th:src="@{/js/library/custom.min.js}" type="text/javascript"></script>
 <!-- Editable -->
-<script th:src="@{/js/library/jquery.dataTables.min.js}"></script>
-<script th:src="@{/js/library/dataTables.responsive.min.js}"></script>
-<script>
-    $('#config-table').DataTable({
-        responsive: true
-    });
-</script>
+
+<script th:src="@{/js/library/wysihtml5-0.3.0.js}"></script>
+<script th:src="@{/js/library/bootstrap-wysihtml5.js}"></script>
+
 </body>
 </html>

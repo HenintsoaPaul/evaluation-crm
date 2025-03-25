@@ -1,15 +1,19 @@
 package site.easy.to.build.crm.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import site.easy.to.build.crm.entity.OAuthUser;
+import site.easy.to.build.crm.entity.User;
+import site.easy.to.build.crm.google.service.acess.GoogleAccessService;
 import site.easy.to.build.crm.service.DataDeleteService;
 import site.easy.to.build.crm.service.DataGeneratorService;
-
-import java.util.HashMap;
-import java.util.Map;
+import site.easy.to.build.crm.service.user.UserServiceImpl;
+import site.easy.to.build.crm.util.AuthenticationUtils;
 
 @Controller
 @RequestMapping("/data/management")
@@ -18,6 +22,8 @@ public class DataManagementController {
 
     private final DataDeleteService service;
     private final DataGeneratorService generatorService;
+    private final AuthenticationUtils authenticationUtils;
+    private final UserServiceImpl userService;
 
     @GetMapping
     public String showPage(Model model) {
@@ -65,5 +71,30 @@ public class DataManagementController {
             redirectAttributes.addFlashAttribute("errorGen", e.getMessage());
         }
         return "redirect:/data/management";
+    }
+
+    @GetMapping("/izy")
+    public String showFichier3(Model model, Authentication authentication) {
+        // security role
+        int userId = authenticationUtils.getLoggedInUserId(authentication);
+        User user = userService.findById(userId);
+        if(user.isInactiveUser()) {
+            return "error/account-inactive";
+        }
+
+        // envoi email
+        boolean hasGoogleGmailAccess = false;
+        boolean isGoogleUser = false;
+        if(!(authentication instanceof UsernamePasswordAuthenticationToken)) {
+            isGoogleUser = true;
+            OAuthUser oAuthUser = authenticationUtils.getOAuthUserFromAuthentication(authentication);
+            if(oAuthUser.getGrantedScopes().contains(GoogleAccessService.SCOPE_GMAIL)){
+                hasGoogleGmailAccess = true;
+            }
+        }
+
+        model.addAttribute("hasGoogleGmailAccess", hasGoogleGmailAccess);
+        model.addAttribute("isGoogleUser", isGoogleUser);
+        return "/data-management/csv";
     }
 }

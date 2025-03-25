@@ -11,26 +11,27 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "budget")
-public class Budget {
+@Table(name = "budget_total")
+public class BudgetTotal {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     @JsonView(POV.Expense.class)
     private Integer id;
 
-    @Column(name = "creation_date")
+    @NotNull
+    @Column(name = "amount_total", nullable = false)
     @JsonView(POV.Expense.class)
-    private LocalDateTime creationDate;
+    private Double amountTotal;
 
     @NotNull
-    @Column(name = "amount", nullable = false)
+    @Column(name = "amount_remain", nullable = false)
     @JsonView(POV.Expense.class)
-    private Double amount;
+    private Double amountRemain;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "customer_id", nullable = false)
+    @JoinColumn(name = "customer_id", nullable = false, unique = true)
     @JsonIgnore
     private Customer customer;
 }

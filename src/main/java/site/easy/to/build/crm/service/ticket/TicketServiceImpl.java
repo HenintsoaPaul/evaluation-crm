@@ -3,19 +3,24 @@ package site.easy.to.build.crm.service.ticket;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import site.easy.to.build.crm.cpl.TicketCpl;
 import site.easy.to.build.crm.entity.Customer;
+import site.easy.to.build.crm.repository.ExpenseRepository;
 import site.easy.to.build.crm.repository.TicketRepository;
 import site.easy.to.build.crm.entity.Ticket;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class TicketServiceImpl implements TicketService{
 
     private final TicketRepository ticketRepository;
+    private final ExpenseRepository expenseRepository;
 
-    public TicketServiceImpl(TicketRepository ticketRepository) {
+    public TicketServiceImpl(TicketRepository ticketRepository, ExpenseRepository expenseRepository) {
         this.ticketRepository = ticketRepository;
+        this.expenseRepository = expenseRepository;
     }
 
     @Override
@@ -46,6 +51,15 @@ public class TicketServiceImpl implements TicketService{
     @Override
     public List<Ticket> findAll() {
         return ticketRepository.findAll();
+    }
+
+    public List<TicketCpl> findAllCpl() {
+        List<Ticket> tickets = ticketRepository.findAll();
+        List<TicketCpl> ticketCpls = new ArrayList<>();
+        for (Ticket ticket : tickets) {
+            ticketCpls.add(new TicketCpl(ticket, expenseRepository.findByTicketId(ticket.getTicketId())));
+        }
+        return ticketCpls;
     }
 
     @Override

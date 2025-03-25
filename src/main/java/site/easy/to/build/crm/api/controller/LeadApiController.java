@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import site.easy.to.build.crm.api.POV;
+import site.easy.to.build.crm.cpl.LeadCpl;
 import site.easy.to.build.crm.entity.Expense;
 import site.easy.to.build.crm.entity.Lead;
 import site.easy.to.build.crm.service.ExpenseService;
@@ -23,6 +24,12 @@ public class LeadApiController {
     @JsonView({POV.Expense.class})
     public List<Lead> findAll() {
         return leadService.findAll();
+    }
+
+    @GetMapping("/cpl")
+    @JsonView({POV.Expense.class})
+    public List<LeadCpl> findAllCpl() {
+        return leadService.findAllCpl();
     }
 
     @GetMapping("/{id}/expense")

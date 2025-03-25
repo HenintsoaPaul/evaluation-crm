@@ -130,7 +130,8 @@ public class CustomerController {
 
     @PostMapping("/create-customer")
     public String createNewCustomer(@ModelAttribute("customer") @Validated Customer customer, BindingResult bindingResult,
-                                    Authentication authentication, @RequestParam(value = "SendEmail", defaultValue = "false") boolean sendEmail, Model model) {
+                                    Authentication authentication,
+                                    @RequestParam(value = "SendEmail", defaultValue = "false") boolean sendEmail, Model model) {
 
         if(bindingResult.hasErrors()) {
             boolean hasGoogleGmailAccess = false;
@@ -163,6 +164,7 @@ public class CustomerController {
 
         CustomerLoginInfo customerLoginInfo1 = customerLoginInfoService.save(customerLoginInfo);
         customer.setCustomerLoginInfo(customerLoginInfo1);
+
         Customer createdCustomer = customerService.save(customer);
         customerLoginInfo1.setCustomer(createdCustomer);
 

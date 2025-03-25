@@ -71,11 +71,6 @@ public class Lead {
     @JsonView(POV.Expense.class)
     private LocalDateTime createdAt;
 
-    @ManyToOne
-    @JoinColumn(name = "budget_id")
-    @JsonView(POV.Expense.class)
-    private Budget budget;
-
     @JsonBackReference
     @OneToOne(mappedBy = "lead")
     private Expense expense;
@@ -85,7 +80,7 @@ public class Lead {
 
     public Lead(String name, String status, String phone, String meetingId, Boolean googleDrive, String googleDriveFolderId,
                 List<LeadAction> leadActions, List<File> files, List<GoogleDriveFile> googleDriveFiles, User manager, User employee,
-                Customer customer, LocalDateTime createdAt, Budget budget) {
+                Customer customer, LocalDateTime createdAt) {
         this.name = name;
         this.status = status;
         this.phone = phone;
@@ -99,7 +94,6 @@ public class Lead {
         this.employee = employee;
         this.customer = customer;
         this.createdAt = createdAt;
-        this.budget = budget;
     }
 
     public void addLeadAction(LeadAction leadAction) {
