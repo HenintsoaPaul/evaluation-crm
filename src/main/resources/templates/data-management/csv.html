@@ -69,80 +69,45 @@
             <!-- Start Page Content -->
             <!-- ============================================================== -->
 
-            <!-- fichier1 -->
+            <!-- all -->
             <div class="card">
                 <div class="card-body">
-                    <h4 class="card-title">Import Customer </h4>
-                    <form th:action="@{/import/csv/customer}" id="csv1-form" method="post"
+                    <h4 class="card-title">Import initial data </h4>
+                    <form th:action="@{/import/csv/all}" id="all-csv-form" method="post"
                           enctype="multipart/form-data">
                         <div class="mt-3">
-                            <label class="m-t-20" for="user-file">Fichier (.csv):</label>
+                            <label class="m-t-20" for="customer-file">Customer :</label>
                             <div class="input-group">
                                 <input type="file"
-                                       name="file"
+                                       id="customer-file"
+                                       name="fileCustomer"
                                        accept=".csv"
                                        class="form-control"
-                                       placeholder="Import customer"
-                                       required="required">
+                                       required>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary m-t-20">Import Csv</button>
-                    </form>
-
-                    <br>
-                    <div th:if="${messageImp != null}" class="alert alert-success alert-dismissible fade show"
-                         role="alert">
-                        <strong>Success!</strong> [[${messageImp}]]
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">×</span>
-                        </button>
-                    </div>
-                    <div th:if="${errorImp != null}" class="alert alert-danger alert-dismissible fade show"
-                         role="alert">
-                        <strong>Erreur!</strong> [[${errorImp}]]
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">×</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- fichier3 -->
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="card-title">Import Expense </h4>
-                    <form th:action="@{/import/csv/expense}" id="csv-form" method="post" enctype="multipart/form-data">
                         <div class="mt-3">
-                            <label class="m-t-20" for="user-file">Fichier (.csv):</label>
+                            <label class="m-t-20" for="budget-file">Budget :</label>
                             <div class="input-group">
-                                <input id="user-file" type="file" 
-                                name="file" accept=".csv" 
-                                class="form-control"
-                                placeholder="Import expense"
-                                       required="required">
+                                <input type="file"
+                                       id="budget-file"
+                                       name="fileBudget"
+                                       accept=".csv"
+                                       class="form-control"
+                                       required>
                             </div>
                         </div>
-
-                        <!--sendEmail-->
-                        <div class="input-group" th:if="${isGoogleUser && hasGoogleGmailAccess}">
-                            <input type="checkbox" id="sendEmail" name="SendEmail">
-                            <label for="sendEmail" class="m-b-0 m-l-5">Send customer a registration link</label>
+                        <div class="mt-3">
+                            <label class="m-t-20" for="expense-file">Expense :</label>
+                            <div class="input-group">
+                                <input type="file"
+                                       id="expense-file"
+                                       name="fileExpense"
+                                       accept=".csv"
+                                       class="form-control"
+                                       required>
+                            </div>
                         </div>
-                        <div th:if="${!isGoogleUser}" class="ribbon-wrapper card">
-                            <div class="ribbon ribbon-danger">Email Service</div>
-                            <p class="ribbon-content">To send emails customer a registration link, please log in with
-                                your <a th:href="${home + 'oauth2/authorization/google'}" target="_blank">Google
-                                    account</a></p>
-                        </div>
-                        <div th:if="${isGoogleUser && !hasGoogleGmailAccess}" class="ribbon-wrapper card">
-                            <div class="ribbon ribbon-danger">Gmail Access</div>
-                            <p class="ribbon-content">In order to send customer a registration link, you have to grant
-                                the app access to your <a
-                                        th:href="${home + 'employee/settings/google-services'}" target="_blank">Gmail
-                                    account</a>
-                            </p>
-                        </div>
-
                         <button type="submit" class="btn btn-primary m-t-20">Import Csv</button>
                     </form>
 
@@ -163,44 +128,6 @@
                     </div>
                 </div>
             </div>
-
-                        <!-- fichier4 -->
-                        <div class="card">
-                            <div class="card-body">
-                                <h4 class="card-title">Import Budget </h4>
-                                <form th:action="@{/import/csv/budget}" id="csv1-form" method="post"
-                                      enctype="multipart/form-data">
-                                    <div class="mt-3">
-                                        <label class="m-t-20" for="user-file">Fichier (.csv):</label>
-                                        <div class="input-group">
-                                            <input type="file"
-                                                   name="file"
-                                                   accept=".csv"
-                                                   class="form-control"
-                                                   placeholder="Import Budget"
-                                                   required="required">
-                                        </div>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary m-t-20">Import Csv</button>
-                                </form>
-            
-                                <br>
-                                <div th:if="${messageImp != null}" class="alert alert-success alert-dismissible fade show"
-                                     role="alert">
-                                    <strong>Success!</strong> [[${messageImp}]]
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">×</span>
-                                    </button>
-                                </div>
-                                <div th:if="${errorImp != null}" class="alert alert-danger alert-dismissible fade show"
-                                     role="alert">
-                                    <strong>Erreur!</strong> [[${errorImp}]]
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">×</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
 
             <!-- ============================================================== -->
             <!-- End Page Content -->
