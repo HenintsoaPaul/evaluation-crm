@@ -16,14 +16,14 @@ public class ExpenseCsvDto {
     private String subject_or_name;
 
     @NotBlank(message = "'status' cannot be blank")
-    @Pattern(regexp = "^(open|assigned|on-hold|in-progress|resolved|closed|reopened|pending-customer-response|escalated|archived|meeting-to-schedule|assign-to-sales|success)$", message = "Invalid status")
-    @CsvBindByName(column = "status")
-    private String status;
-
-    @NotBlank(message = "'status' cannot be blank")
     @Pattern(regexp = "^(lead|ticket)$", message = "Invalid type")
     @CsvBindByName(column = "type")
     private String type;
+
+    @NotBlank(message = "'status' cannot be blank")
+    @Pattern(regexp = "^(open|assigned|on-hold|in-progress|resolved|closed|reopened|pending-customer-response|escalated|archived|meeting-to-schedule|assign-to-sales|success)$", message = "Invalid status")
+    @CsvBindByName(column = "status")
+    private String status;
 
     @NotBlank(message = "'expenseStr' cannot be blank")
     @CsvBindByName(column = "expense")
