@@ -256,38 +256,40 @@ public class ExpenseService {
         }
 
         if (csvDto.getType().equals("ticket")) {
-            String st = csvDto.getStatus();
-            if (!this.ticketStatus.contains(st)) {
-                String msg = "Status '" + st + "' incompatible for a ticket  !";
-                errors.add(new CsvErrorWrapper(filename, rowIndex, msg, csvDto.toString()));
-                return null;
-            }
+//            String st = csvDto.getStatus();
+//            if (!this.ticketStatus.contains(st)) {
+//                String msg = "Status '" + st + "' incompatible for a ticket  !";
+//                errors.add(new CsvErrorWrapper(filename, rowIndex, msg, csvDto.toString()));
+//                return null;
+//            }
 
             Ticket ticket = new Ticket();
             ticket.setCustomer(customer);
             ticket.setManager(user);
             ticket.setEmployee(user);
             ticket.setSubject(csvDto.getSubject_or_name());
-            ticket.setStatus(st);
+//            ticket.setStatus(st);
+            ticket.setStatus("archived");
             ticket.setPriority("low");
 
             expense.setTicket(ticket);
             ticketRepository.save(ticket);
 
         } else if (csvDto.getType().equals("lead")) {
-            String st = csvDto.getStatus();
-            if (!this.leadStatus.contains(st)) {
-                String msg = "Status '" + st + "' incompatible for a lead  !";
-                errors.add(new CsvErrorWrapper(filename, rowIndex, msg, csvDto.toString()));
-                return null;
-            }
+//            String st = csvDto.getStatus();
+//            if (!this.leadStatus.contains(st)) {
+//                String msg = "Status '" + st + "' incompatible for a lead  !";
+//                errors.add(new CsvErrorWrapper(filename, rowIndex, msg, csvDto.toString()));
+//                return null;
+//            }
 
             Lead lead = new Lead();
             lead.setCustomer(customer);
             lead.setManager(user);
             lead.setEmployee(user);
             lead.setName(csvDto.getSubject_or_name());
-            lead.setStatus(st);
+//            lead.setStatus(st);
+            lead.setStatus("archived");
 
             expense.setLead(lead);
             leadRepository.save(lead);
