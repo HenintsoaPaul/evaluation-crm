@@ -249,7 +249,7 @@ public class ExpenseService {
         }
 
         try {
-            decreaseBudget(customer.getCustomerId(), csvDto.getExpense(), email);
+            decreaseBudget(customer, csvDto.getExpense(), email);
         } catch (CsvValidationException ve) {
             errors.add(new CsvErrorWrapper(filename, rowIndex, ve.getMessage(), csvDto.toString()));
             return null;
@@ -302,22 +302,24 @@ public class ExpenseService {
         return expense;
     }
 
-    private void decreaseBudget(int customerId, double amountExpense, String email) throws CsvValidationException {
-        BudgetTotal budgetTotal = budgetTotalRepository.findByCustomerId(customerId).orElse(null);
+    private void decreaseBudget(Customer customer, double amountExpense, String email) throws CsvValidationException {
+        BudgetTotal budgetTotal = budgetTotalRepository.findByCustomerId(customer.getCustomerId()).orElse(null);
         if (budgetTotal == null) {
-            throw new CsvValidationException("No budget found for customer '" + email + "'!", null);
+//            throw new CsvValidationException("No budget found for customer '" + email + "'!", null);
+            budgetTotal = new BudgetTotal();
+            budgetTotal.setAmountTotal(0.0);
+            budgetTotal.setAmountRemain(0.0);
+            budgetTotal.setCustomer(customer);
         }
 
+
         double amountRemain = budgetTotal.getAmountRemain();
-        if (amountRemain < amountExpense) {
-            String msg = "Budget of customer '" + customerId + "' exceeded expense amount! Remain: " + amountRemain + " | expense: " + amountExpense;
-            throw new CsvValidationException(msg, null);
-        }
+//        if (amountRemain < amountExpense) {
+//            String msg = "Budget of customer '" + customerId + "' exceeded expense amount! Remain: " + amountRemain + " | expense: " + amountExpense;
+//            throw new CsvValidationException(msg, null);
+//        }
 
         budgetTotal.setAmountRemain(amountRemain - amountExpense);
         budgetTotalRepository.save(budgetTotal);
     }
-
-    private final Set<String> ticketStatus = Set.of("open","assigned","on-hold","in-progress","resolved","closed","reopened","pending-customer-response","escalated","archived");
-    private final Set<String> leadStatus = Set.of("meeting-to-schedule","assign-to-sales","archived","success");
 }
