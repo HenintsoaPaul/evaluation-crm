@@ -284,7 +284,7 @@
         });
 
         // Soumission du formulaire
-        $('#leadForm').submit(function (e) {
+        $('#ticketForm').submit(function (e) {
             e.preventDefault();
             if (!validateForm()) {
                 return;
@@ -295,7 +295,7 @@
         // Bouton Continuer
         $('#confirmSubmit').click(function () {
             $('#confirmationModal').modal('hide');
-            $('#leadForm').unbind('submit').submit();
+            $('#ticketForm').unbind('submit').submit();
         });
 
         // Validation du formulaire
