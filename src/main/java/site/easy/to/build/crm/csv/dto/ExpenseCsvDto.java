@@ -28,7 +28,7 @@ public class ExpenseCsvDto {
 
     @NotBlank(message = "'expenseStr' cannot be blank")
     @CsvBindByName(column = "expense")
-    @Pattern(regexp = "^\\d+(\\.\\d{1,2})?$", message = "'expenseStr' must be a valid positive number")
+    @Pattern(regexp = "^\\d+([.,]\\d{1,2})?$", message = "'budgetStr' must be a valid number, e.g., '600.5' or '600,5'")
     private String expenseStr;
 
     @DecimalMin(value = "0.0", inclusive = false, message = "'expense' must be strictly sup to 0.0")
