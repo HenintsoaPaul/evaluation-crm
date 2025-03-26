@@ -14,9 +14,12 @@ public class DataDeleteService {
 
     private final JdbcTemplate jdbcTemplate;
 
+//    private final List<String> excludedTables = List.of(
+//            "customer", "customer_login_info", "oauth_users",
+//            "roles", "user_profile", "user_roles", "users"
+//    );
     private final List<String> excludedTables = List.of(
-            "customer", "customer_login_info", "oauth_users",
-            "roles", "user_profile", "user_roles", "users"
+            "oauth_users", "roles", "user_profile", "user_roles", "users"
     );
 
     public List<String> getAllTables() {
