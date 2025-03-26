@@ -22,11 +22,14 @@ public class BudgetCsvDto {
 
     // Custom setter for budget to handle comma replacement
     public void setBudgetStr(String budget) {
-        if (budget.contains(",")) {
-            this.budget = Double.parseDouble(budget.replace(",", "."));
-        } else {
-            this.budget = Double.parseDouble(budget);
-        }
+        this.budget = -1;
         this.budgetStr = budget;
+        if (budget != null && !budget.trim().isEmpty() && !budget.isEmpty()) {
+            if (budget.contains(",")) {
+                this.budget = Double.parseDouble(budget.replace(",", "."));
+            } else {
+                this.budget = Double.parseDouble(budget);
+            }
+        }
     }
 }
