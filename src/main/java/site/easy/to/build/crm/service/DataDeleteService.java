@@ -19,7 +19,7 @@ public class DataDeleteService {
 //            "roles", "user_profile", "user_roles", "users"
 //    );
     private final List<String> excludedTables = List.of(
-            "oauth_users", "roles", "user_profile", "user_roles", "users"
+            "oauth_users", "roles", "user_profile", "user_roles", "users", "budget_alert_config"
     );
 
     public List<String> getAllTables() {
