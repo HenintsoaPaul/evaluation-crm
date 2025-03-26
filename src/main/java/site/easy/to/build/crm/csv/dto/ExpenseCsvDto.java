@@ -28,6 +28,7 @@ public class ExpenseCsvDto {
 
     @NotBlank(message = "'expenseStr' cannot be blank")
     @CsvBindByName(column = "expense")
+    @Pattern(regexp = "^\\d+(\\.\\d{1,2})?$", message = "'expenseStr' must be a valid positive number")
     private String expenseStr;
 
     @DecimalMin(value = "0.0", inclusive = false, message = "'expense' must be strictly sup to 0.0")
@@ -35,14 +36,18 @@ public class ExpenseCsvDto {
 
     // Custom setter for expense to handle comma replacement
     public void setExpenseStr(String expense) {
-        this.expense = -1;
         this.expenseStr = expense;
-        if (expense != null && !expense.trim().isEmpty() && !expense.isEmpty()) {
-            if (expense.contains(",")) {
-                this.expense = Double.parseDouble(expense.replace(",", "."));
-            } else {
-                this.expense = Double.parseDouble(expense);
+
+        try {
+            if (expense != null && !expense.trim().isEmpty() && !expense.isEmpty()) {
+                if (expense.contains(",")) {
+                    this.expense = Double.parseDouble(expense.replace(",", "."));
+                } else {
+                    this.expense = Double.parseDouble(expense);
+                }
             }
+        } catch (NumberFormatException e) {
+            System.err.println("Invalid expense format: " + expense);
         }
     }
 }
