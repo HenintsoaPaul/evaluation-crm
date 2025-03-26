@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -255,24 +256,38 @@ public class ExpenseService {
         }
 
         if (csvDto.getType().equals("ticket")) {
+            String st = csvDto.getStatus();
+            if (!this.ticketStatus.contains(st)) {
+                String msg = "Status '" + st + "' incompatible for a ticket  !";
+                errors.add(new CsvErrorWrapper(filename, rowIndex, msg, csvDto.toString()));
+                return null;
+            }
+
             Ticket ticket = new Ticket();
             ticket.setCustomer(customer);
             ticket.setManager(user);
-            ticket.setEmployee(null);
+            ticket.setEmployee(user);
             ticket.setSubject(csvDto.getSubject_or_name());
-            ticket.setStatus(csvDto.getStatus());
+            ticket.setStatus(st);
             ticket.setPriority("low");
 
             expense.setTicket(ticket);
             ticketRepository.save(ticket);
 
         } else if (csvDto.getType().equals("lead")) {
+            String st = csvDto.getStatus();
+            if (!this.leadStatus.contains(st)) {
+                String msg = "Status '" + st + "' incompatible for a lead  !";
+                errors.add(new CsvErrorWrapper(filename, rowIndex, msg, csvDto.toString()));
+                return null;
+            }
+
             Lead lead = new Lead();
             lead.setCustomer(customer);
             lead.setManager(user);
-            lead.setEmployee(null);
+            lead.setEmployee(user);
             lead.setName(csvDto.getSubject_or_name());
-            lead.setStatus(csvDto.getStatus());
+            lead.setStatus(st);
 
             expense.setLead(lead);
             leadRepository.save(lead);
@@ -300,4 +315,7 @@ public class ExpenseService {
         budgetTotal.setAmountRemain(amountRemain - amountExpense);
         budgetTotalRepository.save(budgetTotal);
     }
+
+    private final Set<String> ticketStatus = Set.of("open","assigned","on-hold","in-progress","resolved","closed","reopened","pending-customer-response","escalated","archived");
+    private final Set<String> leadStatus = Set.of("meeting-to-schedule","assign-to-sales","archived","success");
 }
