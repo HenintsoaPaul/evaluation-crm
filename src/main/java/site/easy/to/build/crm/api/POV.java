@@ -11,6 +11,9 @@ public class POV {
     public static class Dashboard extends Public {
     }
 
+    public static class Budget extends Public {
+    }
+
     // private
     public static class Private extends Public {
     }

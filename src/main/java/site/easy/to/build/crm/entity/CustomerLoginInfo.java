@@ -2,7 +2,9 @@ package site.easy.to.build.crm.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import lombok.Data;
 
+@Data
 @Entity
 @Table(name = "customer_login_info")
 public class CustomerLoginInfo {
@@ -41,44 +43,8 @@ public class CustomerLoginInfo {
         this.customer = customer;
     }
 
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
     public boolean isPasswordSet() {
         return passwordSet;
-    }
-
-    public void setPasswordSet(Boolean passwordSet) {
-        this.passwordSet = passwordSet;
-    }
-
-    public Customer getCustomer() {
-        return customer;
-    }
-
-    public void setCustomer(Customer customer) {
-        this.customer = customer;
     }
 
     public String getEmail() {

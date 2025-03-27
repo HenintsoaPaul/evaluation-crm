@@ -16,17 +16,17 @@ public class BudgetTotal {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    @JsonView(POV.Expense.class)
+    @JsonView({POV.Expense.class, POV.Dashboard.class, POV.Budget.class})
     private Integer id;
 
     @NotNull
     @Column(name = "amount_total", nullable = false)
-    @JsonView(POV.Expense.class)
+    @JsonView({POV.Expense.class, POV.Dashboard.class, POV.Budget.class})
     private Double amountTotal;
 
     @NotNull
     @Column(name = "amount_remain", nullable = false)
-    @JsonView(POV.Expense.class)
+    @JsonView({POV.Expense.class, POV.Dashboard.class, POV.Budget.class})
     private Double amountRemain;
 
     @NotNull
