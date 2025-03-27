@@ -3,6 +3,7 @@ package site.easy.to.build.crm.api.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -35,19 +36,25 @@ public class DuplicationController {
 
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
-        byte[] csvBytes = mapper.writeValueAsString(c).getBytes();
+
+        String jsonData = mapper.writeValueAsString(c);
+        System.out.println(jsonData);
+        byte[] csvBytes = jsonData.getBytes();
 
         return new ResponseEntity<>(csvBytes, headers, HttpStatus.OK);
     }
 
     @PostMapping
     public ResponseEntity<String> duplicationProcess(
-            @RequestBody String jsonData
+            @RequestBody JsonData jsonData
     ) {
         try {
             ObjectMapper mapper = new ObjectMapper();
             mapper.registerModule(new JavaTimeModule());
-            Customer customer = mapper.readValue(jsonData, Customer.class);
+
+            String jsonValue = jsonData.getJson_data();
+            System.out.println(jsonValue);
+            Customer customer = mapper.readValue(jsonValue, Customer.class);
 
             System.out.println(customer);
             duplicationService.duplicate(customer);
@@ -56,6 +63,11 @@ public class DuplicationController {
             e.printStackTrace();
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return ResponseEntity.ok(jsonData);
+        return ResponseEntity.ok("Mety ilay duplication");
+    }
+
+    @Getter
+    public static class JsonData {
+        String json_data;
     }
 }

@@ -1,5 +1,6 @@
 package site.easy.to.build.crm.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -214,6 +215,7 @@ public class User {
         this.roles = roles;
     }
 
+    @JsonIgnore
     public boolean isInactiveUser() {
         return this.status.equals("inactive");
     }
