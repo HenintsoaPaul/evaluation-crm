@@ -39,7 +39,7 @@ public class GenericCsvService<T, E> {
 //        }
 //    }
 
-    private List<CsvErrorWrapper> validateBatch(List<T> rows, String filename)  {
+    private List<CsvErrorWrapper> validateBatch(List<T> rows, String filename) {
         List<CsvErrorWrapper> csvErrorWrappers = new ArrayList<>();
 
         for (int i = 0; i < rows.size(); i++) {
@@ -70,8 +70,9 @@ public class GenericCsvService<T, E> {
 //                    .withType(clazz)
 //                    .withIgnoreLeadingWhiteSpace(true)
 //                    .withQuoteChar('"') // regrouper les valeurs entre "..." [plusieurs valeurs, sur plusieurs ligne, double "..." pour echapper des "..."]
-////                    .withSeparator(';')
-////                    .withThrowExceptions(false) // pour éviter une erreur fatale en cas de colonne maquant
+
+    /// /                    .withSeparator(';')
+    /// /                    .withThrowExceptions(false) // pour éviter une erreur fatale en cas de colonne maquant
 //                    .build();
 //
 //            List<T> uploads = csvToBean.parse();
@@ -81,7 +82,6 @@ public class GenericCsvService<T, E> {
 //            return uploads;
 //        }
 //    }
-
     public List<T> getDtosFromCsv(MultipartFile file, Class<T> clazz, String filename) throws IOException, CsvValidationException {
         try (
                 InputStreamReader isr = new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8);
@@ -111,9 +111,9 @@ public class GenericCsvService<T, E> {
     }
 
     /*
-    * 1-csv ->conversion-> csvDto (+ validation 😁)
-    * 2-csvDto ->insertion-> tempTable
-    * 3-tempTable ->select distinct des lignes fk a inserer-> . ->insertion des Fk dans les tables des Fk-> void
-    * 4-tempTable ->insertion dans la table final
-    * */
+     * 1-csv ->conversion-> csvDto (+ validation 😁)
+     * 2-csvDto ->insertion-> tempTable
+     * 3-tempTable ->select distinct des lignes fk a inserer-> . ->insertion des Fk dans les tables des Fk-> void
+     * 4-tempTable ->insertion dans la table final
+     * */
 }

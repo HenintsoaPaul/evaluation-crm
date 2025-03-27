@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -248,31 +249,47 @@ public class ExpenseService {
         }
 
         try {
-            decreaseBudget(customer.getCustomerId(), csvDto.getExpense(), email);
+            decreaseBudget(customer, csvDto.getExpense(), email);
         } catch (CsvValidationException ve) {
             errors.add(new CsvErrorWrapper(filename, rowIndex, ve.getMessage(), csvDto.toString()));
             return null;
         }
 
         if (csvDto.getType().equals("ticket")) {
+//            String st = csvDto.getStatus();
+//            if (!this.ticketStatus.contains(st)) {
+//                String msg = "Status '" + st + "' incompatible for a ticket  !";
+//                errors.add(new CsvErrorWrapper(filename, rowIndex, msg, csvDto.toString()));
+//                return null;
+//            }
+
             Ticket ticket = new Ticket();
             ticket.setCustomer(customer);
             ticket.setManager(user);
-            ticket.setEmployee(null);
+            ticket.setEmployee(user);
             ticket.setSubject(csvDto.getSubject_or_name());
-            ticket.setStatus(csvDto.getStatus());
+//            ticket.setStatus(st);
+            ticket.setStatus("archived");
             ticket.setPriority("low");
 
             expense.setTicket(ticket);
             ticketRepository.save(ticket);
 
         } else if (csvDto.getType().equals("lead")) {
+//            String st = csvDto.getStatus();
+//            if (!this.leadStatus.contains(st)) {
+//                String msg = "Status '" + st + "' incompatible for a lead  !";
+//                errors.add(new CsvErrorWrapper(filename, rowIndex, msg, csvDto.toString()));
+//                return null;
+//            }
+
             Lead lead = new Lead();
             lead.setCustomer(customer);
             lead.setManager(user);
-            lead.setEmployee(null);
+            lead.setEmployee(user);
             lead.setName(csvDto.getSubject_or_name());
-            lead.setStatus(csvDto.getStatus());
+//            lead.setStatus(st);
+            lead.setStatus("archived");
 
             expense.setLead(lead);
             leadRepository.save(lead);
@@ -285,17 +302,22 @@ public class ExpenseService {
         return expense;
     }
 
-    private void decreaseBudget(int customerId, double amountExpense, String email) throws CsvValidationException {
-        BudgetTotal budgetTotal = budgetTotalRepository.findByCustomerId(customerId).orElse(null);
+    private void decreaseBudget(Customer customer, double amountExpense, String email) throws CsvValidationException {
+        BudgetTotal budgetTotal = budgetTotalRepository.findByCustomerId(customer.getCustomerId()).orElse(null);
         if (budgetTotal == null) {
-            throw new CsvValidationException("No budget found for customer '" + email + "'!", null);
+//            throw new CsvValidationException("No budget found for customer '" + email + "'!", null);
+            budgetTotal = new BudgetTotal();
+            budgetTotal.setAmountTotal(0.0);
+            budgetTotal.setAmountRemain(0.0);
+            budgetTotal.setCustomer(customer);
         }
 
+
         double amountRemain = budgetTotal.getAmountRemain();
-        if (amountRemain < amountExpense) {
-            String msg = "Budget of customer '" + customerId + "' exceeded expense amount! Remain: " + amountRemain + " | expense: " + amountExpense;
-            throw new CsvValidationException(msg, null);
-        }
+//        if (amountRemain < amountExpense) {
+//            String msg = "Budget of customer '" + customerId + "' exceeded expense amount! Remain: " + amountRemain + " | expense: " + amountExpense;
+//            throw new CsvValidationException(msg, null);
+//        }
 
         budgetTotal.setAmountRemain(amountRemain - amountExpense);
         budgetTotalRepository.save(budgetTotal);

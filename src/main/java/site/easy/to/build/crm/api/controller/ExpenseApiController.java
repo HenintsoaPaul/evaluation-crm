@@ -43,6 +43,7 @@ public class ExpenseApiController {
         maps.put("lead", expenseService.findAllLeads());
         maps.put("ticket", expenseService.findAllTickets());
         maps.put("customer", expenseService.findAllCustomers());
+        maps.put("budget", budgetTotalRepository.findAll());
 
         return maps;
     }
