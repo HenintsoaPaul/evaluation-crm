@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.easy.to.build.crm.entity.*;
 import site.easy.to.build.crm.repository.*;
+import site.easy.to.build.crm.util.EmailTokenUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,26 +19,30 @@ public class DuplicationService {
     private final TicketRepository ticketRepository;
     private final LeadRepository leadRepository;
     private final ExpenseRepository expenseRepository;
+    private final FileRepository fileRepository;
+    private final GoogleDriveFileRepository googleDriveFileRepository;
+    private final LeadActionRepository leadActionRepository;
 
     @Transactional
     public void duplicate(Customer original) {
         Customer clone = cloneCustomer(original);
         customerRepository.save(clone);
 
-        CustomerLoginInfo cliClone = cloneCustomerLoginInfo(clone);
+        CustomerLoginInfo cliClone = cloneCustomerLoginInfo(original, clone);
         customerLoginInfoRepository.save(cliClone);
 
         clone.setCustomerLoginInfo(cliClone);
         customerRepository.save(clone);
 
         cloneLeads(original, clone);
+        System.out.println("DUPLICATED LEADS");
         cloneTickets(original, clone);
+        System.out.println("DUPLICATED TICKETS");
     }
 
     private void cloneLeads(Customer original, Customer clone) {
         int customerId = original.getCustomerId();
-        List<Lead> leads = leadRepository.findByCustomerCustomerId(customerId),
-                leadClones = new ArrayList<>();
+        List<Lead> leads = leadRepository.findByCustomerCustomerId(customerId);
 
         for (Lead leadOrg : leads) {
             Lead leadClone = new Lead();
@@ -47,12 +52,61 @@ public class DuplicationService {
             leadClone.setMeetingId(leadOrg.getMeetingId());
             leadClone.setGoogleDrive(leadOrg.getGoogleDrive());
             leadClone.setGoogleDriveFolderId(leadOrg.getGoogleDriveFolderId());
-            leadClone.setLeadActions(leadOrg.getLeadActions());
-            leadClone.setFiles(leadOrg.getFiles());
-            leadClone.setGoogleDriveFiles(leadOrg.getGoogleDriveFiles());
+
+            leadClone.setCustomer(clone);
+            leadRepository.save(leadClone);
+
+//            leadClone.setLeadActions(leadOrg.getLeadActions());
+            List<LeadAction> leadActions = new ArrayList<>();
+            for (LeadAction leadAction : leadOrg.getLeadActions()) {
+                LeadAction leadActionClone = new LeadAction();
+                leadActionClone.setAction(leadAction.getAction());
+                leadActionClone.setTimestamp(leadAction.getTimestamp());
+
+                leadActionClone.setLead(leadClone);
+
+                leadActions.add(leadActionClone);
+            }
+            leadActionRepository.saveAll(leadActions);
+            leadClone.setLeadActions(leadActions);
+
+//            leadClone.setFiles(leadOrg.getFiles());
+            List<File> fileClones = new ArrayList<>();
+            for (File fileOrg : leadOrg.getFiles()) {
+                File fileClone = new File();
+                fileClone.setFileName("copy_" + fileOrg.getFileName());
+                fileClone.setFileData(fileOrg.getFileData());
+                fileClone.setFileType(fileOrg.getFileType());
+                fileClone.setContract(fileOrg.getContract());
+
+                fileClone.setLead(leadClone);
+
+                fileClones.add(fileClone);
+            }
+            fileRepository.saveAll(fileClones);
+            leadClone.setFiles(fileClones);
+
+//            leadClone.setGoogleDriveFiles(leadOrg.getGoogleDriveFiles());
+            List<GoogleDriveFile> gdFileClones = new ArrayList<>();
+            for (GoogleDriveFile gdFileOrg : leadOrg.getGoogleDriveFiles()) {
+                GoogleDriveFile gdFileClone = new GoogleDriveFile();
+                gdFileClone.setDriveFileId(gdFileOrg.getDriveFileId());
+                gdFileClone.setDriveFolderId(gdFileOrg.getDriveFolderId());
+                gdFileClone.setContract(gdFileOrg.getContract());
+
+                gdFileClone.setLead(leadClone);
+
+                gdFileClones.add(gdFileClone);
+            }
+            googleDriveFileRepository.saveAll(gdFileClones);
+            leadClone.setGoogleDriveFiles(gdFileClones);
+
             leadClone.setManager(leadOrg.getManager());
             leadClone.setEmployee(leadOrg.getEmployee());
             leadClone.setCreatedAt(leadOrg.getCreatedAt());
+
+            leadClone.setCustomer(clone);
+            leadRepository.save(leadClone);
 
             // exp
             Expense expOriginal = expenseRepository.findByLeadId(leadOrg.getLeadId());
@@ -62,17 +116,14 @@ public class DuplicationService {
             expClone.setLead(leadClone);
             expenseRepository.save(expClone);
 
-            leadClone.setCustomer(clone);
             leadClone.setExpense(expClone);
-            leadClones.add(leadClone);
+            leadRepository.save(leadClone);
         }
-        leadRepository.saveAll(leadClones);
     }
 
     private void cloneTickets(Customer original, Customer clone) {
         int customerId = original.getCustomerId();
-        List<Ticket> tickets = ticketRepository.findByCustomerCustomerId(customerId),
-                ticketClones = new ArrayList<>();
+        List<Ticket> tickets = ticketRepository.findByCustomerCustomerId(customerId);
 
         for (Ticket ticketOrg : tickets) {
             Ticket ticketClone = new Ticket();
@@ -84,28 +135,29 @@ public class DuplicationService {
             ticketClone.setEmployee(ticketOrg.getEmployee());
             ticketClone.setCreatedAt(ticketOrg.getCreatedAt());
 
+            ticketClone.setCustomer(clone);
+            ticketRepository.save(ticketClone);
+
             // exp
-            Expense expOriginal = expenseRepository.findByLeadId(ticketOrg.getTicketId());
+            Expense expOriginal = expenseRepository.findByTicketId(ticketOrg.getTicketId());
             Expense expClone = new Expense();
             expClone.setAmount(expOriginal.getAmount());
             expClone.setCreationDate(expOriginal.getCreationDate());
             expClone.setTicket(ticketClone);
             expenseRepository.save(expClone);
 
-            ticketClone.setCustomer(clone);
             ticketClone.setExpense(expClone);
-            ticketClones.add(ticketClone);
+            ticketRepository.save(ticketClone);
         }
-        ticketRepository.saveAll(ticketClones);
     }
 
-    private CustomerLoginInfo cloneCustomerLoginInfo(Customer cloneCustomer) {
-        CustomerLoginInfo cliOrg = customerLoginInfoRepository.findByCustomer(cloneCustomer);
+    private CustomerLoginInfo cloneCustomerLoginInfo(Customer customerOrg, Customer cloneCustomer) {
+        CustomerLoginInfo cliOrg = customerLoginInfoRepository.findByCustomer(customerOrg);
 
         CustomerLoginInfo cliClone = new CustomerLoginInfo();
         cliClone.setUsername(cloneCustomer.getUser().getUsername());
         cliClone.setPassword(cliOrg.getPassword());
-        cliClone.setToken(cliOrg.getToken());
+        cliClone.setToken(EmailTokenUtils.generateToken());
         cliClone.setPasswordSet(cliOrg.isPasswordSet());
         cliClone.setCustomer(cloneCustomer);
 
